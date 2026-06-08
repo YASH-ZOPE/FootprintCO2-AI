@@ -12,7 +12,7 @@ const RecommendationEngine = {
             id: 'p_bike_short',
             category: 'transport',
             title: 'Walk or Cycle Short Trips',
-            description: 'Replace car trips under 2 miles with walking or biking. Saves fuel and promotes health.',
+            description: 'Replace car/scooter trips under 2 km with walking or cycling. Saves fuel and cuts emission.',
             co2Reduction: 0.5, // tCO2e/yr
             points: 50,
             easeOfAdoption: 'easy'
@@ -20,8 +20,8 @@ const RecommendationEngine = {
         {
             id: 'p_transit_weekly',
             category: 'transport',
-            title: 'Weekly Public Transit Commute',
-            description: 'Swap your car commute for bus or train transit just one day a week.',
+            title: 'Weekly Metro/Bus Commute',
+            description: 'Swap your personal vehicle ride for Metro or local bus transit just one day a week.',
             co2Reduction: 0.8,
             points: 80,
             easeOfAdoption: 'easy'
@@ -29,8 +29,8 @@ const RecommendationEngine = {
         {
             id: 'p_carpool_share',
             category: 'transport',
-            title: 'Carpool with Coworkers',
-            description: 'Share your daily commute with at least one other person to cut transit footprints in half.',
+            title: 'Carpool with Colleagues',
+            description: 'Share your office commute or rides with colleagues to cut fuel costs and emissions.',
             co2Reduction: 1.1,
             points: 120,
             easeOfAdoption: 'medium'
@@ -38,8 +38,8 @@ const RecommendationEngine = {
         {
             id: 'p_flight_limit',
             category: 'transport',
-            title: 'Replace One Short Flight',
-            description: 'Choose train travel or virtual meetings instead of taking a regional flight.',
+            title: 'Optimize Regional Travel',
+            description: 'Choose train travel (like Vande Bharat) instead of regional flights whenever feasible.',
             co2Reduction: 0.6,
             points: 100,
             easeOfAdoption: 'medium'
@@ -49,8 +49,8 @@ const RecommendationEngine = {
         {
             id: 'p_led_bulbs',
             category: 'energy',
-            title: 'Upgrade to LED Bulbs',
-            description: 'Replace standard incandescent bulbs with energy-efficient LEDs throughout your home.',
+            title: 'Upgrade to BEE 5-Star LEDs',
+            description: 'Replace traditional lights with energy-efficient 5-star rated LED bulbs in all rooms.',
             co2Reduction: 0.3,
             points: 40,
             easeOfAdoption: 'easy'
@@ -58,8 +58,8 @@ const RecommendationEngine = {
         {
             id: 'p_thermostat_adjust',
             category: 'energy',
-            title: 'Optimize Thermostat Settings',
-            description: 'Lower heating by 2°F in winter or raise AC by 2°F in summer to slash energy loads.',
+            title: 'Set AC Temperature to 24°C',
+            description: 'Follow BEE guidelines: set your air conditioner to 24°C instead of 18°C. Saves ~6% power per degree.',
             co2Reduction: 0.5,
             points: 60,
             easeOfAdoption: 'easy'
@@ -67,8 +67,8 @@ const RecommendationEngine = {
         {
             id: 'p_unplug_vampire',
             category: 'energy',
-            title: 'Banish Vampire Energy Draw',
-            description: 'Unplug chargers, electronics, and appliances when not in use or use smart power strips.',
+            title: 'Turn Off Appliance Switches',
+            description: 'Always switch off wall plugs for chargers, TVs, and microwave units to stop standby power draw.',
             co2Reduction: 0.2,
             points: 30,
             easeOfAdoption: 'easy'
@@ -76,8 +76,8 @@ const RecommendationEngine = {
         {
             id: 'p_green_tariff',
             category: 'energy',
-            title: 'Switch to Green Energy Tariffs',
-            description: 'Enroll in your utility provider\'s 100% renewable/solar energy program.',
+            title: 'Adopt Rooftop Solar',
+            description: 'Enroll in solar initiatives (like PM Surya Ghar Yojana) to produce renewable energy locally.',
             co2Reduction: 1.8,
             points: 200,
             easeOfAdoption: 'medium'

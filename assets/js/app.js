@@ -176,13 +176,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function processOnboardingSubmit() {
         // Collect Inputs
         const onboardInputs = {
-            carMiles: parseFloat(document.getElementById('onboardCarMiles').value),
-            evMiles: parseFloat(document.getElementById('onboardEvMiles').value),
-            transitMiles: parseFloat(document.getElementById('onboardTransitMiles').value),
+            carKm: parseFloat(document.getElementById('onboardCarMiles').value),
+            evKm: parseFloat(document.getElementById('onboardEvMiles').value),
+            transitKm: parseFloat(document.getElementById('onboardTransitMiles').value),
             flightHours: parseFloat(document.getElementById('onboardFlightHours').value),
             electricityKwh: parseFloat(document.getElementById('onboardElectricity').value),
             solarPercent: parseFloat(document.getElementById('onboardSolar').value),
-            gasTherms: parseFloat(document.getElementById('onboardGas').value),
+            lpgCylinders: parseFloat(document.getElementById('onboardGas').value),
             householdSize: parseInt(document.getElementById('onboardHousehold').value),
             dietType: document.getElementById('onboardDietType').value,
             localFood: document.getElementById('onboardLocalFood').checked,
@@ -267,13 +267,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getSandboxInputs() {
         return {
-            carMiles: parseFloat(calcCarMiles.value),
-            evMiles: parseFloat(calcEvMiles.value),
-            transitMiles: parseFloat(calcTransitMiles.value),
+            carKm: parseFloat(calcCarMiles.value),
+            evKm: parseFloat(calcEvMiles.value),
+            transitKm: parseFloat(calcTransitMiles.value),
             flightHours: parseFloat(calcFlightHours.value),
             electricityKwh: parseFloat(calcElectricity.value),
             solarPercent: parseFloat(calcSolar.value),
-            gasTherms: parseFloat(calcGas.value),
+            lpgCylinders: parseFloat(calcGas.value),
             householdSize: parseInt(calcHousehold.value),
             dietType: calcDietType.value,
             localFood: calcLocalFood.checked,
@@ -285,14 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function restoreSandboxInputs(inputs) {
         if (!inputs) return;
 
-        calcCarMiles.value = inputs.carMiles;
-        document.getElementById('valCarMiles').textContent = inputs.carMiles;
+        calcCarMiles.value = inputs.carKm;
+        document.getElementById('valCarMiles').textContent = inputs.carKm;
 
-        calcEvMiles.value = inputs.evMiles;
-        document.getElementById('valEvMiles').textContent = inputs.evMiles;
+        calcEvMiles.value = inputs.evKm;
+        document.getElementById('valEvMiles').textContent = inputs.evKm;
 
-        calcTransitMiles.value = inputs.transitMiles;
-        document.getElementById('valTransitMiles').textContent = inputs.transitMiles;
+        calcTransitMiles.value = inputs.transitKm;
+        document.getElementById('valTransitMiles').textContent = inputs.transitKm;
 
         calcFlightHours.value = inputs.flightHours;
         document.getElementById('valFlightHours').textContent = inputs.flightHours;
@@ -303,8 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
         calcSolar.value = inputs.solarPercent;
         document.getElementById('valSolar').textContent = inputs.solarPercent;
 
-        calcGas.value = inputs.gasTherms;
-        document.getElementById('valGas').textContent = inputs.gasTherms;
+        calcGas.value = inputs.lpgCylinders;
+        document.getElementById('valGas').textContent = inputs.lpgCylinders;
 
         calcHousehold.value = inputs.householdSize;
         document.getElementById('valHousehold').textContent = inputs.householdSize;
