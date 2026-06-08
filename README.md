@@ -253,7 +253,7 @@ node test.js
 
 ```
 ==========================================
-   RUNNING SUSTANA CORE ENGINES TESTS
+   RUNNING FOOTPRINTCO2 CORE ENGINES TESTS
 ==========================================
 
 ✅ Passed: CalcEngine basic calculations with standard average inputs

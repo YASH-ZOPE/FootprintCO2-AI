@@ -1,5 +1,5 @@
 /**
- * Automated Unit Test Suite for Sustana Core Engines
+ * Automated Unit Test Suite for FOOTPRINTCO2 Core Engines
  * Runs natively in Node.js using assert.
  */
 
