@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap');
+/* Google Fonts loaded via <link> in index.html for non-render-blocking performance */
 
 :root {
     --bg-dark: hsl(222, 47%, 4%);
@@ -40,6 +40,41 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+/* Keyboard Accessibility — focus indicators */
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 1rem;
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    z-index: 10000;
+    font-weight: 600;
+    transition: top var(--transition-fast);
+}
+
+.skip-link:focus-visible {
+    top: 1rem;
+    outline: none;
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.btn:focus-visible {
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.form-input:focus-visible,
+.form-select:focus-visible {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-glow);
 }
 
 body {
@@ -251,6 +286,10 @@ a:hover {
     font-size: 1.35rem;
     font-weight: 800;
     color: var(--text-primary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
 }
 
 .logo span {
@@ -487,39 +526,6 @@ a:hover {
     font-weight: 700;
     color: var(--primary-light);
     font-size: 1.1rem;
-}
-
-.options-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-}
-
-.option-card {
-    background: hsla(223, 47%, 4%, 0.4);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: var(--transition-fast);
-}
-
-.option-card:hover {
-    border-color: hsla(142, 70%, 50%, 0.3);
-}
-
-.option-card.selected {
-    background: hsla(142, 76%, 45%, 0.1);
-    border-color: var(--primary);
-    color: var(--text-primary);
-    box-shadow: 0 0 10px var(--primary-glow);
-}
-
-.option-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    display: block;
 }
 
 .step-nav {
@@ -817,35 +823,39 @@ a:hover {
     cursor: default;
 }
 
-/* History logs list */
-.log-item {
+/* Recommendation card description */
+.pledge-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0.25rem 0 0.5rem 0;
+}
+
+/* Empty state messages */
+.recommendations-empty,
+.chart-empty {
+    width: 100%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1.5rem;
+    min-height: 100px;
 }
 
-.log-item:last-child {
-    border-bottom: none;
+/* AI Coach loading state */
+.coach-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    height: 60px;
 }
 
-.log-date {
-    font-family: var(--font-heading);
-    font-weight: 500;
-}
-
-.log-co2 {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-/* Quick Log Activity Drawer */
-.log-inputs-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-top: 1rem;
+/* AI Coach heading in advice box */
+.coach-heading {
+    margin-bottom: 0.5rem;
 }
 
 /* CSS charts using SVGs */
@@ -948,6 +958,7 @@ a:hover {
 
 /* Custom API Key modal */
 .api-key-badge {
+    background: transparent;
     cursor: pointer;
     font-size: 0.75rem;
     color: var(--text-muted);

@@ -253,17 +253,20 @@ node test.js
 
 ```
 ==========================================
-   RUNNING FOOTPRINTCO2 CORE ENGINES TESTS
+   RUNNING FOOTPRINTCO2 AI ENGINE TESTS  
 ==========================================
 
-✅ Passed: CalcEngine basic calculations with standard average inputs
+✅ Passed: CalcEngine basic calculations with Indian standard inputs
 ✅ Passed: CalcEngine handles zero value boundary checks correctly
+✅ Passed: CalcEngine clamps negative inputs and out-of-bounds percentages
 ✅ Passed: DecisionEngine prioritization rules work correctly
 ✅ Passed: RecommendationEngine filters active pledges and respects Decision priorities
 ✅ Passed: AICoach cache validation logic enforces 15% delta rules
+✅ Passed: StorageLayer recovers and auto-resets corrupted profile keys
+✅ Passed: StorageLayer handles QuotaExceededExceptions by dropping AI cache
 
 ==========================================
-🎉 ALL 5 TESTS COMPLETED SUCCESSFULLY!
+🎉 ALL 8 TESTS COMPLETED SUCCESSFULLY!
 ==========================================
 ```
 

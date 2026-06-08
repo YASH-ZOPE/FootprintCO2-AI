@@ -5,7 +5,33 @@
 
 const assert = require('assert');
 
-// Load modules
+// ----------------------------------------------------
+// LocalStorage Mock for Node.js Context
+// ----------------------------------------------------
+const mockLocalStorage = {
+    store: {},
+    getItem(key) {
+        return this.store[key] || null;
+    },
+    setItem(key, value) {
+        // Trigger simulated QuotaExceededError on special payload
+        if (value && value.includes("TRIGGER_QUOTA_EXCEEDED")) {
+            throw { name: 'QuotaExceededError', code: 22 };
+        }
+        this.store[key] = String(value);
+    },
+    removeItem(key) {
+        delete this.store[key];
+    },
+    clear() {
+        this.store = {};
+    }
+};
+
+global.localStorage = mockLocalStorage;
+
+// Load modules (Ensure StorageLayer is loaded first to register global Logger wrapper)
+const StorageLayer = require('./assets/js/storage.js');
 const CalcEngine = require('./assets/js/calc.js');
 const DecisionEngine = require('./assets/js/decision.js');
 const RecommendationEngine = require('./assets/js/recommendation.js');
@@ -26,6 +52,11 @@ function runTest(testName, testFn) {
         console.error(error);
         process.exit(1);
     }
+}
+
+// Reset mock store before each storage test
+function resetLocalStorage() {
+    mockLocalStorage.clear();
 }
 
 // ----------------------------------------------------
@@ -88,6 +119,35 @@ runTest("CalcEngine handles zero value boundary checks correctly", () => {
     assert.strictEqual(results.total, 1.0); // 0.90 food + 0.10 waste
 });
 
+runTest("CalcEngine clamps negative inputs and out-of-bounds percentages", () => {
+    const inputs = {
+        carKm: -500, // should clamp to 0
+        evKm: 0,
+        transitKm: 0,
+        flightHours: 0,
+        electricityKwh: 200,
+        solarPercent: 150, // should clamp to 100
+        lpgCylinders: -2,  // should clamp to 0
+        householdSize: 2,
+        dietType: 'vegan',
+        localFood: false,
+        shoppingHabit: 'low',
+        recyclePercent: -20 // should clamp to 0
+    };
+
+    const results = CalcEngine.calculate(inputs);
+
+    // Car must clamp to 0
+    assert.strictEqual(results.categories.transport, 0);
+    
+    // Solar percent 150 clamps to 100, electricityBase = 200 * 12 * 0.00082 = 1.968.
+    // 100% solar reduction reduces base to 0. LPG clamps to 0. Total Energy should be 0.
+    assert.strictEqual(results.categories.energy, 0);
+
+    // Recycle clamps to 0. Waste low = 0.4. Reduction = 0. Total waste = 0.40.
+    assert.strictEqual(results.categories.waste, 0.40);
+});
+
 // ----------------------------------------------------
 // 2. Decision Engine Priority Rule Tests
 // ----------------------------------------------------
@@ -143,6 +203,48 @@ runTest("AICoach cache validation logic enforces 15% delta rules", () => {
     // 20% decrease (8.0 tonnes) -> should refresh (above 15%)
     const refresh2 = AICoach.shouldRefresh(8.0, cached);
     assert.strictEqual(refresh2, true, "Should refresh cache on 20% footprint delta");
+});
+
+// ----------------------------------------------------
+// 5. Storage Integrity & Corruption Tests
+// ----------------------------------------------------
+runTest("StorageLayer recovers and auto-resets corrupted profile keys", () => {
+    resetLocalStorage();
+    
+    // Inject corrupted profile data
+    mockLocalStorage.setItem(StorageLayer.KEYS.PROFILE, "{invalid json profile data");
+
+    // Attempting to read profile should catch parsing error, reset key to default structure, and succeed
+    const profile = StorageLayer.getProfile();
+    assert.strictEqual(profile.name, "Eco Explorer");
+    assert.strictEqual(profile.carbonGoal, 2.0);
+    assert.strictEqual(profile.ecoPoints, 0);
+
+    // Verify key in LocalStorage was repaired
+    const repairedRaw = mockLocalStorage.getItem(StorageLayer.KEYS.PROFILE);
+    assert.ok(repairedRaw.includes('"name":"Eco Explorer"'), "Profile key should be successfully repaired in storage");
+});
+
+runTest("StorageLayer handles QuotaExceededExceptions by dropping AI cache", () => {
+    resetLocalStorage();
+
+    // Cache some AI advice in storage
+    StorageLayer.setAICache("Important AI Advice", 5.2);
+    assert.ok(mockLocalStorage.getItem(StorageLayer.KEYS.AI_CACHE), "Cache should initially exist");
+
+    // Attempt to write an entry simulating quota limits
+    StorageLayer.safeSetItem(StorageLayer.KEYS.HISTORY, "TRIGGER_QUOTA_EXCEEDED");
+
+    // The handler should have cleared the cache to recover space
+    assert.strictEqual(mockLocalStorage.getItem(StorageLayer.KEYS.AI_CACHE), null, "Cache key should be deleted to clean up space");
+});
+
+runTest("Engine configurations and threshold constants are correctly structured", () => {
+    assert.strictEqual(CalcEngine.CONSTANTS.WEEKS_PER_YEAR, 52);
+    assert.strictEqual(CalcEngine.CONSTANTS.MONTHS_PER_YEAR, 12);
+    assert.strictEqual(DecisionEngine.THRESHOLDS.TRANSPORT, 40);
+    assert.strictEqual(RecommendationEngine.MAX_RECOMMENDATIONS, 3);
+    assert.strictEqual(StorageLayer.MAX_HISTORY_ENTRIES, 10);
 });
 
 console.log("\n==========================================");

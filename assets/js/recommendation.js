@@ -5,6 +5,9 @@
  */
 
 const RecommendationEngine = {
+    // Constant parameters to prevent magic numbers
+    MAX_RECOMMENDATIONS: 3,
+
     // Database of pre-defined realistic actions
     DB: [
         // Transport Recommendations
@@ -189,8 +192,8 @@ const RecommendationEngine = {
             return b.co2Reduction - a.co2Reduction;
         });
 
-        // 3. Return the top 3 recommendations
-        return available.slice(0, 3);
+        // 3. Return the top recommendations based on limit constant
+        return available.slice(0, this.MAX_RECOMMENDATIONS);
     }
 };
 

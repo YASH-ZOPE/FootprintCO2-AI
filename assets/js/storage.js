@@ -1,8 +1,29 @@
 /**
- * Storage Layer
+ * Storage Layer — FootprintCO2 AI
  * Manages client-side persistence using HTML5 LocalStorage.
  * Handles state updates, historical logging, and AI recommendation caching.
  */
+
+/**
+ * Global Logger Utility to abstract console logging references
+ */
+const Logger = {
+    error(msg, err) {
+        console.error(`[FootprintCO2 AI Error]: ${msg}`, err || '');
+    },
+    warn(msg, extra) {
+        console.warn(`[FootprintCO2 AI Warning]: ${msg}`, extra || '');
+    },
+    log(msg) {
+        console.log(`[FootprintCO2 AI]: ${msg}`);
+    }
+};
+
+if (typeof window !== 'undefined') {
+    window.Logger = Logger;
+} else if (typeof global !== 'undefined') {
+    global.Logger = Logger;
+}
 
 const StorageLayer = {
     KEYS: {
@@ -15,11 +36,41 @@ const StorageLayer = {
     // Default Profile
     DEFAULT_PROFILE: {
         name: 'Eco Explorer',
-        country: 'US',
+        country: 'IN',
         joinedDate: new Date().toISOString(),
         carbonGoal: 2.0, // target footprint in tCO2e/yr
         ecoPoints: 0,
         ecoTier: 'Eco-Novice'
+    },
+
+    // Constant parameters to prevent magic numbers
+    TIER_LIMITS: {
+        GUARDIAN: 1000,
+        CHAMPION: 500,
+        DEFENDER: 200
+    },
+
+    MAX_HISTORY_ENTRIES: 10,
+
+    /**
+     * Safely sets item in LocalStorage, trapping QuotaExceededError and trying to recover by clearing cache.
+     */
+    safeSetItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+                Logger.warn("LocalStorage quota exceeded! Attempting to free space by clearing AI insights cache.");
+                try {
+                    localStorage.removeItem(this.KEYS.AI_CACHE);
+                    localStorage.setItem(key, value);
+                } catch (retryError) {
+                    Logger.error("LocalStorage write failed even after clearing AI insights cache.", retryError);
+                }
+            } else {
+                Logger.error("Failed to write to LocalStorage due to unknown error:", e);
+            }
+        }
     },
 
     /**
@@ -28,15 +79,17 @@ const StorageLayer = {
     getProfile() {
         let profile = localStorage.getItem(this.KEYS.PROFILE);
         if (!profile) {
-            profile = { ...this.DEFAULT_PROFILE };
-            this.setProfile(profile);
-            return profile;
+            const fallback = { ...this.DEFAULT_PROFILE };
+            this.setProfile(fallback);
+            return fallback;
         }
         try {
             return JSON.parse(profile);
         } catch (e) {
-            console.error("Failed to parse eco_profile, resetting", e);
-            return { ...this.DEFAULT_PROFILE };
+            Logger.error("Failed to parse eco_profile, resetting", e);
+            const fallback = { ...this.DEFAULT_PROFILE };
+            this.setProfile(fallback);
+            return fallback;
         }
     },
 
@@ -44,7 +97,7 @@ const StorageLayer = {
      * Sets user profile
      */
     setProfile(profile) {
-        localStorage.setItem(this.KEYS.PROFILE, JSON.stringify(profile));
+        this.safeSetItem(this.KEYS.PROFILE, JSON.stringify(profile));
     },
 
     /**
@@ -65,9 +118,9 @@ const StorageLayer = {
      * Determines the eco tier title based on point brackets
      */
     calculateTier(points) {
-        if (points >= 1000) return 'Eco-Guardian';
-        if (points >= 500) return 'Eco-Champion';
-        if (points >= 200) return 'Eco-Defender';
+        if (points >= this.TIER_LIMITS.GUARDIAN) return 'Eco-Guardian';
+        if (points >= this.TIER_LIMITS.CHAMPION) return 'Eco-Champion';
+        if (points >= this.TIER_LIMITS.DEFENDER) return 'Eco-Defender';
         return 'Eco-Novice';
     },
 
@@ -80,7 +133,8 @@ const StorageLayer = {
         try {
             return JSON.parse(history);
         } catch (e) {
-            console.error("Failed to parse eco_emissions_history", e);
+            Logger.error("Failed to parse eco_emissions_history, resetting", e);
+            this.safeSetItem(this.KEYS.HISTORY, JSON.stringify([]));
             return [];
         }
     },
@@ -111,12 +165,12 @@ const StorageLayer = {
             history.push(newEntry);
         }
 
-        // Limit size to 10 latest records
-        if (history.length > 10) {
+        // Limit size to max history entries constant
+        if (history.length > this.MAX_HISTORY_ENTRIES) {
             history.shift();
         }
 
-        localStorage.setItem(this.KEYS.HISTORY, JSON.stringify(history));
+        this.safeSetItem(this.KEYS.HISTORY, JSON.stringify(history));
     },
 
     /**
@@ -137,7 +191,8 @@ const StorageLayer = {
         try {
             return JSON.parse(pledges);
         } catch (e) {
-            console.error("Failed to parse eco_active_pledges", e);
+            Logger.error("Failed to parse eco_active_pledges, resetting", e);
+            this.safeSetItem(this.KEYS.PLEDGES, JSON.stringify([]));
             return [];
         }
     },
@@ -146,7 +201,7 @@ const StorageLayer = {
      * Saves list of pledges
      */
     savePledges(pledges) {
-        localStorage.setItem(this.KEYS.PLEDGES, JSON.stringify(pledges));
+        this.safeSetItem(this.KEYS.PLEDGES, JSON.stringify(pledges));
     },
 
     /**
@@ -184,7 +239,8 @@ const StorageLayer = {
         try {
             return JSON.parse(cache);
         } catch (e) {
-            console.error("Failed to parse eco_ai_insights", e);
+            Logger.error("Failed to parse eco_ai_insights, resetting", e);
+            localStorage.removeItem(this.KEYS.AI_CACHE);
             return null;
         }
     },
@@ -198,7 +254,7 @@ const StorageLayer = {
             timestamp: new Date().toISOString(),
             insights: insights
         };
-        localStorage.setItem(this.KEYS.AI_CACHE, JSON.stringify(cacheEntry));
+        this.safeSetItem(this.KEYS.AI_CACHE, JSON.stringify(cacheEntry));
     },
 
     /**

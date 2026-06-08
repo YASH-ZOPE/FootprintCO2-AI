@@ -59,7 +59,7 @@ const AICoach = {
 
         const categoryAdvice = {
             transport: `Your transport footprint is your largest driver, making up **${percentages.transport}%** of your total. Reducing short car trips by walking, or choosing public transit can trim your footprint substantially.`,
-            energy: `Household heating and electricity accounts for **${percentages.energy}%** of your footprint. Small adjustments like lowering your heating thermostat by 2°F or opting for green energy tariffs can slash this dramatically.`,
+            energy: `Household electricity accounts for **${percentages.energy}%** of your footprint. Setting your AC to 24°C (BEE guideline), switching to 5-star rated appliances, and exploring rooftop solar under PM Surya Ghar Yojana can reduce this substantially.`,
             food: `Diet choices are your primary driver at **${percentages.food}%** of your emissions. Swapping high-impact meats (like beef) for poultry or legumes, even a few days a week, will make a major dent.`,
             waste: `Your shopping and waste habits comprise **${percentages.waste}%** of your carbon footprint. Focusing on composting organic scraps and buying second-hand items first will optimize your impact.`
         };
@@ -126,7 +126,7 @@ Rules:
             
             return resultText.trim();
         } catch (error) {
-            console.error("AI Coach API call failed:", error);
+            Logger.error("AI Coach API call failed:", error);
             throw error; // Let app handle fallback display
         }
     }

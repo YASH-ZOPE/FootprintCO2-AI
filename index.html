@@ -3,24 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#070b14">
     <title>FootprintCO2 AI - AI Sustainability Coach & Carbon Tracker</title>
     <meta name="description" content="Understand, track, and reduce your carbon footprint with FootprintCO2 AI's rule-based Decision Engine and AI Sustainability Coach.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
+    <a href="#mainDashboard" class="skip-link">Skip to main content</a>
+
     <!-- Header Navigation -->
     <header class="navbar">
         <div class="container nav-container">
-            <div class="logo" id="navLogo">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <button class="logo" id="navLogo" type="button" aria-label="FootprintCO2 AI - Show active profile details">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58 1 9.3A7 7 0 0 1 11 20z"/>
                     <circle cx="9" cy="13" r="1"/>
                 </svg>
                 <span>FootprintCO2 AI</span>
-            </div>
+            </button>
             <div class="nav-user">
-                <button class="api-key-badge" id="btnApiKeyConfig" aria-label="Configure Gemini API Key">
+                <button class="api-key-badge" type="button" id="btnApiKeyConfig" aria-label="Configure Gemini API Key">
                     🔑 API Key
                 </button>
                 <div class="badge-points" id="navPointsBadge" aria-label="Earned Eco Points">
@@ -182,7 +188,7 @@
                                 <label class="form-label" for="calcDietType">General Dietary Style</label>
                                 <select class="form-select" id="calcDietType">
                                     <option value="meat-heavy">Meat-Heavy (Daily red meat)</option>
-                                    <option value="average" selected>Average/Mixed (Standard Western)</option>
+                                    <option value="average" selected>Average/Mixed (Standard Indian diet)</option>
                                     <option value="vegetarian">Vegetarian (No meat/fish)</option>
                                     <option value="vegan">Vegan (Entirely plant-based)</option>
                                 </select>
@@ -230,7 +236,7 @@
             <div class="glass-card">
                 <div class="coach-header">
                     <div class="coach-avatar">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 .364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                     </div>
@@ -243,7 +249,7 @@
                     Initial advice will load after you complete onboarding.
                 </div>
                 <div class="coach-actions">
-                    <button class="btn btn-accent btn-sm" id="btnRequestAiDeep" style="font-size:0.8rem; padding:0.5rem 1rem;">
+                    <button class="btn btn-accent btn-sm" type="button" id="btnRequestAiDeep" style="font-size:0.8rem; padding:0.5rem 1rem;">
                         ⚡ Generate AI Deep Insights
                     </button>
                 </div>
@@ -305,7 +311,7 @@
                     <!-- Dynamic chart bars injected here -->
                 </div>
                 <div class="coach-actions" style="margin-top: 0.75rem;">
-                    <button class="btn btn-secondary" id="btnClearHistory" style="font-size:0.75rem; padding:0.4rem 0.85rem;">
+                    <button class="btn btn-secondary" type="button" id="btnClearHistory" style="font-size:0.75rem; padding:0.4rem 0.85rem;">
                         Reset Data
                     </button>
                 </div>
@@ -314,9 +320,9 @@
     </main>
 
     <!-- Onboarding Survey Modal -->
-    <div class="modal-overlay" id="onboardingModal">
+    <div class="modal-overlay" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingDesc">
         <div class="glass-card onboarding-card">
-            <div class="step-indicator">
+            <div class="step-indicator" aria-hidden="true">
                 <div class="step-dot active" id="dot1">1</div>
                 <div class="step-dot" id="dot2">2</div>
                 <div class="step-dot" id="dot3">3</div>
@@ -327,8 +333,8 @@
             <form id="onboardingForm">
                 <!-- Step 1: User Profile -->
                 <div class="onboarding-step active" id="step1">
-                    <h2 class="step-title">Welcome to FootprintCO2 AI</h2>
-                    <p class="step-desc">Let's set up your profile and sustainability goals.</p>
+                    <h2 class="step-title" id="onboardingTitle">Welcome to FootprintCO2 AI</h2>
+                    <p class="step-desc" id="onboardingDesc">Let's set up your profile and sustainability goals.</p>
                     <div class="form-group">
                         <label class="form-label" for="onboardName">What is your name?</label>
                         <input class="form-input" type="text" id="onboardName" placeholder="e.g. Jane Doe" required value="Eco Pioneer">
@@ -444,19 +450,20 @@
     </div>
 
     <!-- API Key Configuration Modal -->
-    <div class="modal-overlay" id="apiKeyModal">
+    <div class="modal-overlay" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyTitle" aria-describedby="apiKeyDesc">
         <div class="glass-card" style="width:100%; max-width:480px;">
-            <h2>Configure Gemini API Key</h2>
-            <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem; margin-bottom:1.5rem;">
-                Providing a Gemini API key enables deep AI insights directly inside the coach dashboard. Your key is stored securely on your browser only.
+            <h2 id="apiKeyTitle">Configure Gemini API Key</h2>
+            <p id="apiKeyDesc" style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem; margin-bottom:1.5rem;">
+                Providing a Gemini API key enables deep AI insights directly inside the coach dashboard.
+                <br><strong style="color: var(--warning);">Security Warning:</strong> The key is stored in memory (session storage) and will not persist after closing the browser tab. Entering API keys in client-side applications carries risk if your browser environment is compromised.
             </p>
             <div class="form-group">
                 <label class="form-label" for="geminiApiKeyInput">Gemini API Key</label>
                 <input class="form-input" type="password" id="geminiApiKeyInput" placeholder="AIzaSy...">
             </div>
             <div class="step-nav" style="margin-top:1.5rem; border-top:none; padding-top:0;">
-                <button class="btn btn-secondary" id="btnApiKeyCancel">Cancel</button>
-                <button class="btn btn-primary" id="btnApiKeySave">Save Key</button>
+                <button class="btn btn-secondary" type="button" id="btnApiKeyCancel">Cancel</button>
+                <button class="btn btn-primary" type="button" id="btnApiKeySave">Save Key</button>
             </div>
         </div>
     </div>
@@ -467,11 +474,11 @@
     </footer>
 
     <!-- Script imports -->
-    <script src="assets/js/calc.js"></script>
-    <script src="assets/js/storage.js"></script>
-    <script src="assets/js/decision.js"></script>
-    <script src="assets/js/recommendation.js"></script>
-    <script src="assets/js/ai.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/calc.js" defer></script>
+    <script src="assets/js/storage.js" defer></script>
+    <script src="assets/js/decision.js" defer></script>
+    <script src="assets/js/recommendation.js" defer></script>
+    <script src="assets/js/ai.js" defer></script>
+    <script src="assets/js/app.js" defer></script>
 </body>
 </html>

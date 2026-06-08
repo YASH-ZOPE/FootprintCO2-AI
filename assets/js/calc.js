@@ -33,6 +33,15 @@ const CalcEngine = {
         }
     },
 
+    // Standard scalar factors to prevent magic numbers in calculate()
+    CONSTANTS: {
+        WEEKS_PER_YEAR: 52,
+        MONTHS_PER_YEAR: 12,
+        LOCAL_FOOD_REDUCTION_FACTOR: 0.90,
+        MAX_RECYCLING_REDUCTION_TONNES: 0.4,
+        MIN_WASTE_FOOTPRINT_TONNES: 0.1
+    },
+
     /**
      * Calculates emissions across all categories.
      * Inputs should be formatted with weekly/monthly metrics.
@@ -55,48 +64,48 @@ const CalcEngine = {
     calculate(inputs) {
         // Default safe fallbacks
         const data = {
-            carKm: parseFloat(inputs.carKm) || 0,
-            evKm: parseFloat(inputs.evKm) || 0,
-            transitKm: parseFloat(inputs.transitKm) || 0,
-            flightHours: parseFloat(inputs.flightHours) || 0,
-            electricityKwh: parseFloat(inputs.electricityKwh) || 0,
-            solarPercent: parseFloat(inputs.solarPercent) || 0,
-            lpgCylinders: parseFloat(inputs.lpgCylinders) || 0,
+            carKm: Math.max(0, parseFloat(inputs.carKm) || 0),
+            evKm: Math.max(0, parseFloat(inputs.evKm) || 0),
+            transitKm: Math.max(0, parseFloat(inputs.transitKm) || 0),
+            flightHours: Math.max(0, parseFloat(inputs.flightHours) || 0),
+            electricityKwh: Math.max(0, parseFloat(inputs.electricityKwh) || 0),
+            solarPercent: Math.min(100, Math.max(0, parseFloat(inputs.solarPercent) || 0)),
+            lpgCylinders: Math.max(0, parseFloat(inputs.lpgCylinders) || 0),
             householdSize: Math.max(1, parseInt(inputs.householdSize) || 1),
             dietType: inputs.dietType || 'average',
             localFood: !!inputs.localFood,
             shoppingHabit: inputs.shoppingHabit || 'medium',
-            recyclePercent: parseFloat(inputs.recyclePercent) || 0
+            recyclePercent: Math.min(100, Math.max(0, parseFloat(inputs.recyclePercent) || 0))
         };
 
         // 1. Transportation (Annualized)
         // Weekly km * 52 weeks = annual km
-        const carEmissions = data.carKm * 52 * this.FACTORS.GAS_CAR_PER_KM;
-        const evEmissions = data.evKm * 52 * this.FACTORS.EV_CAR_PER_KM;
-        const transitEmissions = data.transitKm * 52 * this.FACTORS.PUBLIC_TRANSIT_PER_KM;
+        const carEmissions = data.carKm * this.CONSTANTS.WEEKS_PER_YEAR * this.FACTORS.GAS_CAR_PER_KM;
+        const evEmissions = data.evKm * this.CONSTANTS.WEEKS_PER_YEAR * this.FACTORS.EV_CAR_PER_KM;
+        const transitEmissions = data.transitKm * this.CONSTANTS.WEEKS_PER_YEAR * this.FACTORS.PUBLIC_TRANSIT_PER_KM;
         const flightEmissions = data.flightHours * this.FACTORS.FLIGHT_PER_HOUR;
         const transportTotal = carEmissions + evEmissions + transitEmissions + flightEmissions;
 
         // 2. Household Energy (Annualized, divided by household occupants)
         // Monthly * 12 months = annual
-        const electricityBase = data.electricityKwh * 12 * this.FACTORS.ELECT_PER_KWH;
+        const electricityBase = data.electricityKwh * this.CONSTANTS.MONTHS_PER_YEAR * this.FACTORS.ELECT_PER_KWH;
         const solarReduction = electricityBase * (data.solarPercent / 100);
         const electricityNet = Math.max(0, electricityBase - solarReduction);
         
-        const gasEmissions = data.lpgCylinders * 12 * this.FACTORS.LPG_PER_CYLINDER;
+        const gasEmissions = data.lpgCylinders * this.CONSTANTS.MONTHS_PER_YEAR * this.FACTORS.LPG_PER_CYLINDER;
         const energyTotal = (electricityNet + gasEmissions) / data.householdSize;
 
         // 3. Food
         let foodTotal = this.FACTORS.DIETS[data.dietType] || this.FACTORS.DIETS['average'];
         if (data.localFood) {
-            foodTotal *= 0.90; // 10% reduction for local/swadeshi organic foods
+            foodTotal *= this.CONSTANTS.LOCAL_FOOD_REDUCTION_FACTOR; // 10% reduction for local/swadeshi organic foods
         }
 
         // 4. Waste & Consumption
         let wasteTotal = this.FACTORS.SHOPPING[data.shoppingHabit] || this.FACTORS.SHOPPING['medium'];
         // Recycling reduction: Max recycling (100%) reduces waste footprint by up to 0.4 tonnes CO2e/yr
-        const recyclingReduction = (data.recyclePercent / 100) * 0.4;
-        wasteTotal = Math.max(0.1, wasteTotal - recyclingReduction);
+        const recyclingReduction = (data.recyclePercent / 100) * this.CONSTANTS.MAX_RECYCLING_REDUCTION_TONNES;
+        wasteTotal = Math.max(this.CONSTANTS.MIN_WASTE_FOOTPRINT_TONNES, wasteTotal - recyclingReduction);
 
         // Summation
         const total = transportTotal + energyTotal + foodTotal + wasteTotal;

@@ -5,12 +5,16 @@
  */
 
 const DecisionEngine = {
+    // Priority thresholds (percentages of total footprint)
+    THRESHOLDS: {
+        TRANSPORT: 40,
+        ENERGY: 35,
+        FOOD: 30,
+        WASTE: 25
+    },
+
     /**
-     * Determines priority of emission categories based on thresholds:
-     * - Transport > 40%
-     * - Energy > 35%
-     * - Food > 30%
-     * - Waste > 25%
+     * Determines priority of emission categories based on thresholds
      * 
      * @param {Object} percentages - Category percentages { transport, energy, food, waste }
      * @returns {Array<string>} Prioritized list of category names
@@ -19,17 +23,17 @@ const DecisionEngine = {
         const flagged = [];
         
         // 1. Evaluate rules independently
-        if (percentages.transport > 40) {
-            flagged.push({ name: 'transport', percent: percentages.transport, threshold: 40 });
+        if (percentages.transport > this.THRESHOLDS.TRANSPORT) {
+            flagged.push({ name: 'transport', percent: percentages.transport, threshold: this.THRESHOLDS.TRANSPORT });
         }
-        if (percentages.energy > 35) {
-            flagged.push({ name: 'energy', percent: percentages.energy, threshold: 35 });
+        if (percentages.energy > this.THRESHOLDS.ENERGY) {
+            flagged.push({ name: 'energy', percent: percentages.energy, threshold: this.THRESHOLDS.ENERGY });
         }
-        if (percentages.food > 30) {
-            flagged.push({ name: 'food', percent: percentages.food, threshold: 30 });
+        if (percentages.food > this.THRESHOLDS.FOOD) {
+            flagged.push({ name: 'food', percent: percentages.food, threshold: this.THRESHOLDS.FOOD });
         }
-        if (percentages.waste > 25) {
-            flagged.push({ name: 'waste', percent: percentages.waste, threshold: 25 });
+        if (percentages.waste > this.THRESHOLDS.WASTE) {
+            flagged.push({ name: 'waste', percent: percentages.waste, threshold: this.THRESHOLDS.WASTE });
         }
 
         // 2. Sort flagged categories by their percentage contribution descending
