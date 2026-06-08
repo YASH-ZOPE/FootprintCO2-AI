@@ -12,7 +12,7 @@ const RecommendationEngine = require('./assets/js/recommendation.js');
 const AICoach = require('./assets/js/ai.js');
 
 console.log("==========================================");
-console.log("   RUNNING SUSTANA CORE ENGINES TESTS    ");
+console.log("   RUNNING FOOTPRINTCO2 AI ENGINE TESTS  ");
 console.log("==========================================\n");
 
 let passedTestsCount = 0;
@@ -31,15 +31,15 @@ function runTest(testName, testFn) {
 // ----------------------------------------------------
 // 1. Carbon Calculator Engine Tests
 // ----------------------------------------------------
-runTest("CalcEngine basic calculations with standard average inputs", () => {
+runTest("CalcEngine basic calculations with Indian standard inputs", () => {
     const inputs = {
-        carMiles: 100,
-        evMiles: 0,
-        transitMiles: 20,
+        carKm: 150,
+        evKm: 0,
+        transitKm: 50,
         flightHours: 5,
-        electricityKwh: 450,
+        electricityKwh: 200,
         solarPercent: 0,
-        gasTherms: 30,
+        lpgCylinders: 1,
         householdSize: 2,
         dietType: 'average',
         localFood: false,
@@ -57,32 +57,32 @@ runTest("CalcEngine basic calculations with standard average inputs", () => {
     assert.ok(results.categories.food >= 0, "Food carbon should be >= 0");
     assert.ok(results.categories.waste >= 0, "Waste carbon should be >= 0");
 
-    // Math verification:
-    // Car = 100 * 52 * 0.00035 = 1.82 tonnes
-    // Transit = 20 * 52 * 0.00012 = 0.1248 tonnes
+    // Math verification (Indian factors):
+    // Car = 150 * 52 * 0.00020 = 1.56 tonnes
+    // Transit = 50 * 52 * 0.00004 = 0.104 tonnes
     // Flight = 5 * 0.09 = 0.45 tonnes
-    // Transport Total = 1.82 + 0.1248 + 0.45 = 2.3948 -> ~2.39 tonnes
-    assert.strictEqual(results.categories.transport, 2.39);
+    // Transport Total = 1.56 + 0.104 + 0.45 = 2.114 -> ~2.11 tonnes
+    assert.strictEqual(results.categories.transport, 2.11);
 
-    // Electricity = 450 * 12 * 0.00040 = 2.16 tonnes
-    // Gas = 30 * 12 * 0.0053 = 1.908 tonnes
-    // Share = (2.16 + 1.908) / 2 = 2.034 tonnes -> ~2.03 tonnes
-    assert.strictEqual(results.categories.energy, 2.03);
+    // Electricity = 200 * 12 * 0.00082 = 1.968 tonnes
+    // LPG = 1 * 12 * 0.0425 = 0.51 tonnes
+    // Share = (1.968 + 0.51) / 2 = 1.239 tonnes -> ~1.24 tonnes
+    assert.strictEqual(results.categories.energy, 1.24);
 });
 
 runTest("CalcEngine handles zero value boundary checks correctly", () => {
     const inputs = {
-        carMiles: 0, evMiles: 0, transitMiles: 0, flightHours: 0,
-        electricityKwh: 0, solarPercent: 0, gasTherms: 0, householdSize: 4,
+        carKm: 0, evKm: 0, transitKm: 0, flightHours: 0,
+        electricityKwh: 0, solarPercent: 0, lpgCylinders: 0, householdSize: 4,
         dietType: 'vegan', localFood: true, shoppingHabit: 'low', recyclePercent: 100
     };
     const results = CalcEngine.calculate(inputs);
-    
+
     // Diet: Vegan baseline = 1.0. Local organic reduces by 10% = 0.90 tonnes.
     assert.strictEqual(results.categories.food, 0.90);
     // Waste: Low shopping baseline = 0.4. Recycling 100% reduces by 0.4 = 0.0 tonnes (bounded to min 0.1)
     assert.strictEqual(results.categories.waste, 0.10);
-    
+
     assert.strictEqual(results.categories.transport, 0);
     assert.strictEqual(results.categories.energy, 0);
     assert.strictEqual(results.total, 1.0); // 0.90 food + 0.10 waste

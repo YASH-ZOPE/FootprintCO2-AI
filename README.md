@@ -1,86 +1,354 @@
-# FootprintCO2: AI-Powered Sustainability Coach & Carbon Tracker
+# FootprintCO2 AI — AI-Powered Sustainability Coach & Carbon Tracker
 
-FootprintCO2 is a modern, high-end, responsive client-side web application designed to help individuals understand, track, and reduce their carbon footprint. By combining a rule-based **Decision Engine** with a token-optimized **AI Sustainability Coach**, FootprintCO2 delivers instant, highly relevant, and actionable recommendations with minimal resource consumption.
+> **Live Demo:** [https://yash-zope.github.io/FootprintCO2-AI/](https://yash-zope.github.io/FootprintCO2-AI/)
 
-## 🌿 Chosen Vertical & Solution Focus
-*   **Vertical**: AI Sustainability Coach & Carbon Footprint Awareness
-*   **Aspiration**: Empower users to transition from passive awareness to active footprint reduction. By providing sliding sandbox calculations, gamified pledges, and progress tracking, users receive personalized guidance tailormade for their daily lives.
+FootprintCO2 AI is a modern, client-side web application that helps individuals understand, track, and reduce their carbon footprint through a rule-based **Decision Engine** and a token-optimized **AI Sustainability Coach**.
 
 ---
 
-## ⚡ How It Works & Architecture
+## Table of Contents
 
-FootprintCO2 separates operations into independent, highly maintainable layers:
-
-```
-User Interface Layer (HTML5/CSS3 Dashboard)
-       ↓
-Carbon Calculator Engine (Calculates emissions from inputs)
-       ↓
-Decision Engine (Evaluates category weights and sets priority routing)
-       ↓
-Recommendation Engine (Filters active pledges and picks top 3 actions)
-       ↓
-AI Deep Analysis Layer (Calls Gemini API using low-token payloads)
-       ↓
-LocalStorage Cache Layer (Saves user state, logs, and advice)
-```
-
-### 1. Carbon Calculator Engine (`assets/js/calc.js`)
-Converts lifestyle habits (transport, energy, food, waste) into metric tonnes of CO₂ equivalent per year (tCO₂e/yr) using standard factors:
-*   **Gasoline Vehicles**: `0.35 kg CO2e` per mile
-*   **Electric Vehicles**: `0.08 kg CO2e` per mile (incorporating grid-mix charging)
-*   **Public Transit**: `0.12 kg CO2e` per passenger mile
-*   **Regional Flights**: `90.0 kg CO2e` per hour
-*   **Electricity**: `0.40 kg CO2e` per kWh (with solar offset reduction)
-*   **Natural Gas**: `5.30 kg CO2e` per therm
-
-### 2. Decision Engine (`assets/js/decision.js`)
-Instead of using expensive AI APIs to prioritize targets, FootprintCO2 uses a fast, rule-based logic framework:
-*   **IF Transport > 40%** of footprint → Prioritize transport interventions.
-*   **IF Energy > 35%** of footprint → Prioritize household energy optimizations.
-*   **IF Food > 30%** of footprint → Prioritize diet modifications.
-*   **IF Waste > 25%** of footprint → Prioritize recycling and reduction tasks.
-Categories are sorted dynamically based on their percentage contributions so that the highest impact drivers are addressed first.
-
-### 3. Recommendation Engine (`assets/js/recommendation.js`)
-Matches prioritized categories with a database of realistic pledges (e.g. carpooling, adjusting thermostats, meatless eating). It filters out already active or completed pledges and yields exactly the top 3 highest-impact suggestions.
-
-### 4. AI Deep Analysis Coach (`assets/js/ai.js`)
-Provides advanced personalization. To remain cost-effective and token-efficient, the coach adheres to strict rules:
-*   **Token Optimization**:
-    *   AI requests contain only summarized carbon metrics (e.g. `{"transport": 2.1, "energy": 1.5, ...}`).
-    *   No historical log lists or personally identifiable data are sent.
-    *   All outputs are limited to 3-4 sentences of highly targeted advice.
-*   **Caching Strategy**: Advice is saved to LocalStorage. It is only refreshed when user footprint total changes by **more than 15%** or when explicitly requested.
-*   **Offline Fallback**: FootprintCO2 immediately generates detailed template-based coach recommendations locally if the API is offline or the user does not provide a key, ensuring 100% operational availability.
-
-### 5. Storage Layer (`assets/js/storage.js`)
-Maintains data persistence across page reloads entirely inside the browser's `LocalStorage`. It tracks:
-*   `eco_profile`: General user metadata, total points, and tier rank.
-*   `eco_emissions_history`: The last 10 carbon calculations to chart historical trends.
-*   `eco_active_pledges`: Active and completed habit records.
-*   `eco_ai_insights`: Cached AI coach advice and footprint hash.
+1. [Problem Statement](#problem-statement)
+2. [Challenge Alignment](#challenge-alignment)
+3. [Chosen Vertical](#chosen-vertical)
+4. [Features](#features)
+5. [Why LocalStorage](#why-localstorage)
+6. [System Architecture](#system-architecture)
+7. [Decision Engine](#decision-engine)
+8. [Token Optimization Strategy](#token-optimization-strategy)
+9. [Technology Stack](#technology-stack)
+10. [Security & Privacy](#security--privacy)
+11. [Accessibility](#accessibility)
+12. [Testing](#testing)
+13. [Screenshots](#screenshots)
+14. [Live Demo](#live-demo)
+15. [Assumptions](#assumptions)
+16. [Future Enhancements](#future-enhancements)
 
 ---
 
-## 🛠️ Testing & Verification
-The platform includes an automated unit test suite (`test.js`) running directly in Node.js validating core algorithms without third-party test dependencies.
+## Problem Statement
 
-### Running Tests
-Execute the test runner from the root workspace directory:
+Many individuals want to reduce their environmental impact but struggle to understand which daily habits contribute most to their carbon footprint.
+
+Most carbon calculators only provide numbers without explaining:
+
+- **What contributes most** to emissions
+- **Which actions have the highest impact**
+- **How users can track long-term improvement**
+
+FootprintCO2 AI addresses this gap through intelligent recommendations, progress tracking, and personalized sustainability coaching — all designed for an Indian audience using Indian standards (km, kWh electricity units, LPG cylinders, Indian CEA grid factors).
+
+---
+
+## Challenge Alignment
+
+| Challenge Requirement | How FootprintCO2 AI Meets It |
+|---|---|
+| **Smart, Dynamic Assistant** | AI Sustainability Coach delivers personalized, context-aware advice |
+| **Logical Decision Making** | Rule-based Decision Engine prioritizes categories before invoking AI |
+| **Practical Real-World Usability** | Recommendations are India-specific (Metro commute, BEE 5-star LEDs, PM Surya Ghar solar, 24°C AC) |
+| **Token-Efficient AI Usage** | Rule-based logic runs first; AI is called only for deep personalization with summarized payloads |
+| **Clean & Maintainable Code** | Modular architecture — each JS file has a single responsibility |
+| **Accessibility-Focused Design** | Semantic HTML, ARIA labels, keyboard navigation, high-contrast dark theme |
+
+---
+
+## Chosen Vertical
+
+**AI Sustainability Coach & Carbon Footprint Awareness**
+
+**Target Audience:**
+
+- 🎓 Students wanting to learn about sustainability
+- 💼 Working professionals tracking commute and energy habits
+- 🌿 Environment-conscious individuals seeking actionable change
+
+---
+
+## Features
+
+| Feature | Description |
+|---|---|
+| **Carbon Footprint Calculator** | Converts transport (km), electricity (units), LPG cylinders, diet, and waste habits into annual tCO₂e using Indian CEA emission factors |
+| **AI Sustainability Coach** | Gemini-powered personalized advice with local template fallback for offline use |
+| **Decision Engine** | Rule-based priority routing (Transport >40%, Energy >35%, Food >30%, Waste >25%) |
+| **Personalized Recommendations** | Top 3 highest-impact actions selected from a curated India-specific database |
+| **Progress Tracking** | Historical bar chart showing footprint trends over time |
+| **Pledge System** | Users commit to specific actions (e.g., "Weekly Metro Commute", "Set AC to 24°C") |
+| **Eco Points & Gamification** | Points and tier ranks (Eco-Novice → Eco-Guardian) drive long-term engagement |
+| **AI Response Caching** | Cached insights refresh only when footprint changes by >15% — reducing token usage |
+| **Offline Support** | Local template-based coach advice works without an API key or network |
+
+---
+
+## Why LocalStorage?
+
+FootprintCO2 AI is designed as a **personal sustainability coach**. Since carbon footprint data is user-specific and does not require multi-user collaboration, LocalStorage was chosen instead of a traditional database.
+
+**Benefits:**
+
+- ✅ **Privacy-first** — data never leaves the user's browser
+- ✅ **Offline support** — works without internet after first load
+- ✅ **Zero backend complexity** — no servers, no databases, no hosting costs
+- ✅ **Fast performance** — instant read/write with no network latency
+- ✅ **Easy deployment** — static files served via GitHub Pages
+
+> The architecture allows future migration to Firebase, Supabase, or PostgreSQL without major structural changes.
+
+---
+
+## System Architecture
+
+The platform separates responsibilities into independent, single-responsibility modules:
+
+```
+┌──────────────────────────────────────────┐
+│          User Interface Layer            │
+│     (HTML5 / CSS3 / Responsive UI)       │
+└──────────────────┬───────────────────────┘
+                   │
+┌──────────────────▼───────────────────────┐
+│       Carbon Calculator Engine           │
+│  (Indian CEA factors, km, kWh, LPG)     │
+└──────────────────┬───────────────────────┘
+                   │
+┌──────────────────▼───────────────────────┐
+│          Decision Engine                 │
+│  (Transport >40%, Energy >35%,           │
+│   Food >30%, Waste >25%)                 │
+└──────────────────┬───────────────────────┘
+                   │
+┌──────────────────▼───────────────────────┐
+│       Recommendation Engine              │
+│  (Top 3 highest-impact actions)          │
+└──────────────────┬───────────────────────┘
+                   │
+┌──────────────────▼───────────────────────┐
+│     AI Deep Analysis Layer               │
+│  (Gemini API — summarized payloads only) │
+└──────────────────┬───────────────────────┘
+                   │
+┌──────────────────▼───────────────────────┐
+│      LocalStorage Cache Layer            │
+│  (Profile, History, Pledges, AI Cache)   │
+└──────────────────────────────────────────┘
+```
+
+### Module Mapping
+
+| Module | File | Responsibility |
+|---|---|---|
+| Calculator Engine | `assets/js/calc.js` | Emission factor calculations |
+| Decision Engine | `assets/js/decision.js` | Category prioritization rules |
+| Recommendation Engine | `assets/js/recommendation.js` | Action database and ranking |
+| AI Coach | `assets/js/ai.js` | LLM integration and caching |
+| Storage Layer | `assets/js/storage.js` | LocalStorage persistence |
+| App Controller | `assets/js/app.js` | UI bindings and state management |
+
+---
+
+## Decision Engine
+
+The platform prioritizes recommendations using **rule-based logic before invoking AI**. This ensures instant responses with zero token cost for the majority of interactions.
+
+### Priority Rules
+
+| Rule | Threshold | Action |
+|---|---|---|
+| Transport dominates | > 40% of total | Prioritize transport recommendations |
+| Energy dominates | > 35% of total | Prioritize energy optimization |
+| Food dominates | > 30% of total | Prioritize dietary changes |
+| Waste dominates | > 25% of total | Prioritize waste reduction |
+
+- Categories are sorted by their actual percentage contribution (highest first)
+- Flagged categories (exceeding thresholds) are always ranked above non-flagged ones
+- Only the **top 3 highest-impact recommendations** are presented
+
+### Indian Emission Factors
+
+| Input | Factor | Source |
+|---|---|---|
+| Petrol/Diesel Car | 0.20 kg CO₂e per km | Indian automotive testing standards |
+| Electric Vehicle | 0.12 kg CO₂e per km | Based on Indian grid mix intensity |
+| Public Transit (Metro/Bus) | 0.04 kg CO₂e per passenger km | Shared transit averages |
+| Electricity | 0.82 kg CO₂e per kWh (unit) | Indian CEA (Central Electricity Authority) |
+| LPG Cylinder | 42.5 kg CO₂e per 14.2 kg cylinder | Standard domestic LPG combustion |
+| Flights | 90 kg CO₂e per hour | IPCC aviation factors |
+
+---
+
+## Token Optimization Strategy
+
+FootprintCO2 AI is designed with **efficiency and cost optimization as core principles**.
+
+| Strategy | Implementation |
+|---|---|
+| **Rule-based first** | Decision Engine and Recommendation Engine run entirely client-side before any AI call |
+| **Summarized payloads** | Only category totals and goal are sent to Gemini — never raw input logs |
+| **Response caching** | AI advice is cached in LocalStorage and reused across sessions |
+| **Change threshold** | Cache is refreshed only when footprint changes by **>15%** or on manual request |
+| **Output limiting** | Gemini is instructed to produce 3–4 sentences (under 120 words) with `maxOutputTokens: 200` |
+| **Offline fallback** | Template-based local advice serves immediately if API is unavailable |
+
+**Result:** The average user triggers zero AI calls during normal calculator interactions. AI is invoked only for deep personalization on explicit request.
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | HTML5, CSS3, JavaScript (ES6+) |
+| **Typography** | Google Fonts (Outfit, Inter) |
+| **Storage** | HTML5 LocalStorage |
+| **AI** | Google Gemini 1.5 Flash API |
+| **Hosting** | GitHub Pages |
+| **Testing** | Node.js native `assert` module |
+
+---
+
+## Security & Privacy
+
+- ❌ **No user accounts** — no signup, no login
+- ❌ **No personal data collection** — no emails, names, or addresses stored remotely
+- ✅ **Local-first storage** — all data stays in the user's browser
+- ✅ **Summarized AI payloads** — only aggregated carbon numbers are transmitted
+- ❌ **No transmission of historical logs** — activity history never leaves the device
+- ✅ **Input validation** — all user inputs are sanitized with `parseFloat`/`parseInt` and bounded with `Math.max`/`Math.min`
+
+---
+
+## Accessibility
+
+| Feature | Implementation |
+|---|---|
+| **Semantic HTML** | Proper use of `<header>`, `<main>`, `<section>`, `<footer>`, `<nav>`, `<form>`, `<label>` |
+| **Keyboard Navigation** | All interactive elements (buttons, sliders, selects) are natively keyboard-accessible |
+| **Responsive Design** | CSS Grid and Flexbox layouts adapt to mobile (375px), tablet (768px), and desktop (1024px+) |
+| **High Contrast Colors** | Deep forest dark theme (`hsl(222, 47%, 4%)`) with white text and vibrant mint/cyan accents exceeding WCAG AA |
+| **ARIA Labels** | Applied to navigation badges, point displays, rank indicators, and interactive controls |
+
+---
+
+## Testing
+
+Automated unit tests validate all core engines. Run from the project root:
+
 ```bash
 node test.js
 ```
 
+### Test Coverage
+
+| Test Suite | What It Validates |
+|---|---|
+| **Formula Validation** | Standard car km calculations (e.g., `150 km/week × 52 × 0.00020 = 1.56 tCO₂e/yr`) |
+| **Boundary/Edge Cases** | Zero inputs, maximum values, single-person households |
+| **Decision Engine Rules** | Transport at 45% → transport ranked first; Food at 60% → food ranked first |
+| **Recommendation Filtering** | Active pledges excluded from results; exactly 3 recommendations returned |
+| **AI Cache Threshold** | 10% change → cache hit (no refresh); 20% change → cache miss (refresh triggered) |
+
+### Test Results
+
+```
+==========================================
+   RUNNING SUSTANA CORE ENGINES TESTS
+==========================================
+
+✅ Passed: CalcEngine basic calculations with standard average inputs
+✅ Passed: CalcEngine handles zero value boundary checks correctly
+✅ Passed: DecisionEngine prioritization rules work correctly
+✅ Passed: RecommendationEngine filters active pledges and respects Decision priorities
+✅ Passed: AICoach cache validation logic enforces 15% delta rules
+
+==========================================
+🎉 ALL 5 TESTS COMPLETED SUCCESSFULLY!
+==========================================
+```
+
 ---
 
-## 🔒 Security & Privacy Considerations
-*   **Zero Personal Data**: We do not collect or store emails, addresses, or private details.
-*   **100% Client-Side**: All calculation data, history graphs, and user logs are kept locally on the user's computer.
-*   **Safe AI Requests**: Transmitted payloads contain only numbers representing annual carbon aggregates.
+## Screenshots
 
-## ♿ Accessibility Compliance
-*   **Semantic HTML**: Adheres strictly to HTML5 landmarks (`<header>`, `<main>`, `<section>`, `<footer>`).
-*   **Aria Labels**: Set on active controls, inputs, progress bars, and stats.
-*   **High Contrast Themes**: Features deep forest backgrounds (`hsl(222, 47%, 4%)`) paired with stark white text, vibrant mint accents, and glowing borders (exceeding WCAG AAA contrast guidelines).
+### Dashboard
+![Dashboard showing carbon footprint metrics, progress bars, and recommendations](screenshots will be added after deployment)
+
+### AI Sustainability Coach
+![AI Coach panel showing personalized advice and cache status](screenshots will be added after deployment)
+
+### Interactive Carbon Calculator
+![Slider-based calculator with transport, energy, food, and waste inputs](screenshots will be added after deployment)
+
+---
+
+## Live Demo
+
+🌐 **[https://yash-zope.github.io/FootprintCO2-AI/](https://yash-zope.github.io/FootprintCO2-AI/)**
+
+---
+
+## Assumptions
+
+1. **India-centric design** — all units use km, electricity units (kWh), and LPG cylinders with Indian CEA emission factors
+2. **Single-user application** — designed for personal use; no multi-user or collaborative features
+3. **Browser support** — targets modern browsers (Chrome, Firefox, Edge, Safari) with LocalStorage support
+4. **Gemini API key** — optional; the platform works fully without one using local template-based advice
+5. **Annual estimation** — weekly/monthly inputs are annualized (×52 weeks or ×12 months) for consistency
+6. **Indian national average** — baseline comparison uses ~1.9 tonnes CO₂e/year per capita
+
+---
+
+## Future Enhancements
+
+- 🔄 Multi-device synchronization via cloud storage (Firebase/Supabase)
+- 🌍 Country-specific emission factor selection
+- 👥 Community sustainability challenges and leaderboards
+- 📅 Weekly AI-generated personalized green action plans
+- 🌱 Carbon offset marketplace integrations
+- 📊 Export reports as PDF for sharing
+- 🇮🇳 Hindi and regional language support
+
+---
+
+## Project Structure
+
+```
+FootprintCO2-AI/
+├── index.html                  # Main application layout
+├── assets/
+│   ├── css/
+│   │   └── style.css           # Premium glassmorphic dark theme
+│   └── js/
+│       ├── calc.js             # Carbon Calculator Engine (Indian factors)
+│       ├── decision.js         # Decision Engine (rule-based prioritization)
+│       ├── recommendation.js   # Recommendation Engine (India-specific actions)
+│       ├── ai.js               # AI Sustainability Coach (Gemini + caching)
+│       ├── storage.js          # LocalStorage persistence layer
+│       └── app.js              # Main application controller
+├── test.js                     # Automated unit test suite
+└── README.md                   # This file
+```
+
+---
+
+## How to Run Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/YASH-ZOPE/FootprintCO2-AI.git
+
+# Open in browser
+cd FootprintCO2-AI
+# Open index.html in any modern browser
+```
+
+No build step, no dependencies, no `npm install` required. The application runs entirely from static files.
+
+---
+
+## License
+
+This project was built for the Carbon Footprint Awareness Challenge.
+
+FootprintCO2 AI © 2026. Made with ♥ for the Planet.
