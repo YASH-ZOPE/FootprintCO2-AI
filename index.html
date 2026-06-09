@@ -87,7 +87,7 @@
             <!-- Detailed Interactive Sliders Calculator -->
             <div class="glass-card">
                 <h2>Interactive Footprint Sandbox</h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                <p class="sandbox-subtitle">
                     Tweak your daily and monthly parameters to see real-time footprint recalculation.
                 </p>
                 
@@ -100,7 +100,8 @@
                             </h3>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcCarMiles">Weekly Gas/Diesel Car (km)</label>
-                                <input class="range-slider" type="range" id="calcCarMiles" min="0" max="800" step="10" value="150">
+                                <input class="range-slider" type="range" id="calcCarMiles" min="0" max="800" step="10" value="150"
+                                       aria-describedby="valCarMiles" aria-label="Weekly gas or diesel car kilometres">
                                 <div class="range-slider-labels">
                                     <span>0 km</span>
                                     <span class="slider-val-display"><span id="valCarMiles">150</span> km</span>
@@ -109,7 +110,8 @@
                             </div>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcEvMiles">Weekly EV driving (km)</label>
-                                <input class="range-slider" type="range" id="calcEvMiles" min="0" max="800" step="10" value="0">
+                                <input class="range-slider" type="range" id="calcEvMiles" min="0" max="800" step="10" value="0"
+                                       aria-describedby="valEvMiles" aria-label="Weekly electric vehicle kilometres">
                                 <div class="range-slider-labels">
                                     <span>0 km</span>
                                     <span class="slider-val-display"><span id="valEvMiles">0</span> km</span>
@@ -118,7 +120,8 @@
                             </div>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcTransitMiles">Weekly Public Transit (km)</label>
-                                <input class="range-slider" type="range" id="calcTransitMiles" min="0" max="400" step="10" value="50">
+                                <input class="range-slider" type="range" id="calcTransitMiles" min="0" max="400" step="10" value="50"
+                                       aria-describedby="valTransitMiles" aria-label="Weekly public transit kilometres">
                                 <div class="range-slider-labels">
                                     <span>0 km</span>
                                     <span class="slider-val-display"><span id="valTransitMiles">50</span> km</span>
@@ -127,7 +130,8 @@
                             </div>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcFlightHours">Yearly Air travel (flight hours)</label>
-                                <input class="range-slider" type="range" id="calcFlightHours" min="0" max="100" step="1" value="5">
+                                <input class="range-slider" type="range" id="calcFlightHours" min="0" max="100" step="1" value="5"
+                                       aria-describedby="valFlightHours" aria-label="Yearly flight hours">
                                 <div class="range-slider-labels">
                                     <span>0 hrs</span>
                                     <span class="slider-val-display"><span id="valFlightHours">5</span> hrs</span>
@@ -143,7 +147,8 @@
                             </h3>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcElectricity">Monthly Electricity (Units/kWh)</label>
-                                <input class="range-slider" type="range" id="calcElectricity" min="0" max="1500" step="10" value="200">
+                                <input class="range-slider" type="range" id="calcElectricity" min="0" max="1500" step="10" value="200"
+                                       aria-describedby="valElectricity" aria-label="Monthly electricity units">
                                 <div class="range-slider-labels">
                                     <span>0 Units</span>
                                     <span class="slider-val-display"><span id="valElectricity">200</span> Units</span>
@@ -152,7 +157,8 @@
                             </div>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcSolar">Solar/Alternative share (%)</label>
-                                <input class="range-slider" type="range" id="calcSolar" min="0" max="100" step="5" value="0">
+                                <input class="range-slider" type="range" id="calcSolar" min="0" max="100" step="5" value="0"
+                                       aria-describedby="valSolar" aria-label="Solar and alternative energy share percentage">
                                 <div class="range-slider-labels">
                                     <span>0%</span>
                                     <span class="slider-val-display"><span id="valSolar">0</span>%</span>
@@ -161,7 +167,8 @@
                             </div>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcGas">Monthly LPG Cylinders</label>
-                                <input class="range-slider" type="range" id="calcGas" min="0" max="4" step="1" value="1">
+                                <input class="range-slider" type="range" id="calcGas" min="0" max="4" step="1" value="1"
+                                       aria-describedby="valGas" aria-label="Monthly LPG cylinders">
                                 <div class="range-slider-labels">
                                     <span>0 cyl</span>
                                     <span class="slider-val-display"><span id="valGas">1</span> cylinder(s)</span>
@@ -170,7 +177,8 @@
                             </div>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcHousehold">Household Occupants</label>
-                                <input class="range-slider" type="range" id="calcHousehold" min="1" max="10" step="1" value="2">
+                                <input class="range-slider" type="range" id="calcHousehold" min="1" max="10" step="1" value="2"
+                                       aria-describedby="valHousehold" aria-label="Number of household occupants">
                                 <div class="range-slider-labels">
                                     <span>1 person</span>
                                     <span class="slider-val-display"><span id="valHousehold">2</span> sharing</span>
@@ -218,7 +226,8 @@
                             </div>
                             <div class="form-group range-slider-container">
                                 <label class="form-label" for="calcRecycle">Recycling Rate (%)</label>
-                                <input class="range-slider" type="range" id="calcRecycle" min="0" max="100" step="5" value="50">
+                                <input class="range-slider" type="range" id="calcRecycle" min="0" max="100" step="5" value="50"
+                                       aria-describedby="valRecycle" aria-label="Household recycling rate percentage">
                                 <div class="range-slider-labels">
                                     <span>0% sort</span>
                                     <span class="slider-val-display"><span id="valRecycle">50</span>% recycled</span>
@@ -270,34 +279,50 @@
                 <div class="category-progress">
                     
                     <div class="progress-bar-label">
-                        <span>🚗 Transportation</span>
+                        <span><span aria-hidden="true">🚗</span> Transportation</span>
                         <span><strong id="labelTransportCo2">0.0</strong> t (<span id="labelTransportPct">0</span>%)</span>
                     </div>
-                    <div class="progress-bar-track">
+                    <div class="progress-bar-track"
+                         role="progressbar"
+                         aria-label="Transportation emissions"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                         id="trackTransport">
                         <div class="progress-bar-fill transport" id="barTransport" style="width: 0%;"></div>
                     </div>
                     
                     <div class="progress-bar-label label-spacing">
-                        <span>⚡ Home Energy</span>
+                        <span><span aria-hidden="true">⚡</span> Home Energy</span>
                         <span><strong id="labelEnergyCo2">0.0</strong> t (<span id="labelEnergyPct">0</span>%)</span>
                     </div>
-                    <div class="progress-bar-track">
+                    <div class="progress-bar-track"
+                         role="progressbar"
+                         aria-label="Home Energy emissions"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                         id="trackEnergy">
                         <div class="progress-bar-fill energy" id="barEnergy" style="width: 0%;"></div>
                     </div>
 
                     <div class="progress-bar-label label-spacing">
-                        <span>🥦 Diet & Food</span>
+                        <span><span aria-hidden="true">🥦</span> Diet &amp; Food</span>
                         <span><strong id="labelFoodCo2">0.0</strong> t (<span id="labelFoodPct">0</span>%)</span>
                     </div>
-                    <div class="progress-bar-track">
+                    <div class="progress-bar-track"
+                         role="progressbar"
+                         aria-label="Diet and Food emissions"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                         id="trackFood">
                         <div class="progress-bar-fill food" id="barFood" style="width: 0%;"></div>
                     </div>
 
                     <div class="progress-bar-label label-spacing">
-                        <span>♻️ Waste & Shopping</span>
+                        <span><span aria-hidden="true">♻️</span> Waste &amp; Shopping</span>
                         <span><strong id="labelWasteCo2">0.0</strong> t (<span id="labelWastePct">0</span>%)</span>
                     </div>
-                    <div class="progress-bar-track">
+                    <div class="progress-bar-track"
+                         role="progressbar"
+                         aria-label="Waste and Shopping emissions"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                         id="trackWaste">
                         <div class="progress-bar-fill waste" id="barWaste" style="width: 0%;"></div>
                     </div>
                 </div>
@@ -309,7 +334,10 @@
                 <p class="chart-subtitle">
                     Your latest carbon levels over time (tCO₂e/yr).
                 </p>
-                <div class="chart-container" id="historyChartContainer">
+                <div class="chart-container"
+                     id="historyChartContainer"
+                     role="img"
+                     aria-label="Carbon footprint history chart. Values shown in tonnes CO₂e per year.">
                     <!-- Dynamic chart bars injected here -->
                 </div>
                 <div class="coach-actions chart-actions">
@@ -320,6 +348,11 @@
             </div>
         </section>
     </main>
+
+    <!-- Screen-reader live region: onboarding step announcements -->
+    <div id="srStepAnnouncer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    <!-- Screen-reader live region: pledge commit confirmations -->
+    <div id="srPledgeAnnouncer" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
 
     <!-- Onboarding Survey Modal -->
     <div class="modal-overlay" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingDesc">
@@ -336,7 +369,12 @@
                 <!-- Step 1: User Profile -->
                 <div class="onboarding-step active" id="step1">
                     <h2 class="step-title" id="onboardingTitle">Welcome to FootprintCO2 AI</h2>
-                    <p class="step-desc" id="onboardingDesc">Let's set up your profile and sustainability goals.</p>
+                    <p class="step-desc" id="onboardingDesc">An intelligent carbon assistant tailored for India.</p>
+                    <div class="onboarding-features-list">
+                        <div class="onboarding-feature-item">🧠 <strong>Rule-based Priority Engine</strong> — Instant recommendations optimized for Indian CEA grid factors.</div>
+                        <div class="onboarding-feature-item">🤖 <strong>AI Sustainability Coach</strong> — Token-efficient Gemini advice cache that triggers only on major changes.</div>
+                        <div class="onboarding-feature-item">🌱 <strong>Gamified Impact Pledges</strong> — Commit to real-world actions to earn Eco-Points and rank tiers.</div>
+                    </div>
                     <div class="form-group">
                         <label class="form-label" for="onboardName">What is your name?</label>
                         <input class="form-input" type="text" id="onboardName" placeholder="e.g. Jane Doe" required value="Eco Pioneer">
@@ -356,22 +394,22 @@
                     <p class="step-desc">Tell us about your weekly travel habits.</p>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardCarMiles">Weekly Gas/Diesel Car driving (km)</label>
-                        <input class="range-slider" type="range" id="onboardCarMiles" min="0" max="800" step="10" value="150">
+                        <input class="range-slider" type="range" id="onboardCarMiles" min="0" max="800" step="10" value="150" aria-describedby="valOnboardCar" aria-label="Weekly gas or diesel car driving in kilometres">
                         <div class="range-slider-labels"><span>0 km</span> <span class="slider-val-display"><span id="valOnboardCar">150</span> km</span> <span>800+</span></div>
                     </div>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardEvMiles">Weekly EV driving (km)</label>
-                        <input class="range-slider" type="range" id="onboardEvMiles" min="0" max="800" step="10" value="0">
+                        <input class="range-slider" type="range" id="onboardEvMiles" min="0" max="800" step="10" value="0" aria-describedby="valOnboardEv" aria-label="Weekly electric vehicle driving in kilometres">
                         <div class="range-slider-labels"><span>0 km</span> <span class="slider-val-display"><span id="valOnboardEv">0</span> km</span> <span>800+</span></div>
                     </div>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardTransitMiles">Weekly Public Transit commute (km)</label>
-                        <input class="range-slider" type="range" id="onboardTransitMiles" min="0" max="400" step="10" value="50">
+                        <input class="range-slider" type="range" id="onboardTransitMiles" min="0" max="400" step="10" value="50" aria-describedby="valOnboardTransit" aria-label="Weekly public transit commute in kilometres">
                         <div class="range-slider-labels"><span>0 km</span> <span class="slider-val-display"><span id="valOnboardTransit">50</span> km</span> <span>400+</span></div>
                     </div>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardFlightHours">Yearly Air travel (flight hours)</label>
-                        <input class="range-slider" type="range" id="onboardFlightHours" min="0" max="100" step="1" value="5">
+                        <input class="range-slider" type="range" id="onboardFlightHours" min="0" max="100" step="1" value="5" aria-describedby="valOnboardFlight" aria-label="Yearly air travel in flight hours">
                         <div class="range-slider-labels"><span>0 hrs</span> <span class="slider-val-display"><span id="valOnboardFlight">5</span> hrs</span> <span>100+</span></div>
                     </div>
                 </div>
@@ -382,22 +420,22 @@
                     <p class="step-desc">Your household utilities and size.</p>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardElectricity">Monthly Electricity (Units/kWh)</label>
-                        <input class="range-slider" type="range" id="onboardElectricity" min="0" max="1500" step="10" value="200">
+                        <input class="range-slider" type="range" id="onboardElectricity" min="0" max="1500" step="10" value="200" aria-describedby="valOnboardElect" aria-label="Monthly electricity units in kilowatt hours">
                         <div class="range-slider-labels"><span>0 Units</span> <span class="slider-val-display"><span id="valOnboardElect">200</span> Units</span> <span>1500+</span></div>
                     </div>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardSolar">Alternative/Solar energy share (%)</label>
-                        <input class="range-slider" type="range" id="onboardSolar" min="0" max="100" step="5" value="0">
+                        <input class="range-slider" type="range" id="onboardSolar" min="0" max="100" step="5" value="0" aria-describedby="valOnboardSolar" aria-label="Solar share percentage">
                         <div class="range-slider-labels"><span>0%</span> <span class="slider-val-display"><span id="valOnboardSolar">0</span>%</span> <span>100%</span></div>
                     </div>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardGas">Monthly LPG Cylinders</label>
-                        <input class="range-slider" type="range" id="onboardGas" min="0" max="4" step="1" value="1">
+                        <input class="range-slider" type="range" id="onboardGas" min="0" max="4" step="1" value="1" aria-describedby="valOnboardGas" aria-label="Monthly LPG cylinders count">
                         <div class="range-slider-labels"><span>0 cyl</span> <span class="slider-val-display"><span id="valOnboardGas">1</span> cylinder(s)</span> <span>4+</span></div>
                     </div>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardHousehold">Household Size (Occupants)</label>
-                        <input class="range-slider" type="range" id="onboardHousehold" min="1" max="10" step="1" value="2">
+                        <input class="range-slider" type="range" id="onboardHousehold" min="1" max="10" step="1" value="2" aria-describedby="valOnboardHouse" aria-label="Number of household members">
                         <div class="range-slider-labels"><span>1 person</span> <span class="slider-val-display"><span id="valOnboardHouse">2</span> sharing</span> <span>10+</span></div>
                     </div>
                 </div>
@@ -437,7 +475,7 @@
                     </div>
                     <div class="form-group range-slider-container">
                         <label class="form-label" for="onboardRecycle">Household Recycling Rate (%)</label>
-                        <input class="range-slider" type="range" id="onboardRecycle" min="0" max="100" step="5" value="50">
+                        <input class="range-slider" type="range" id="onboardRecycle" min="0" max="100" step="5" value="50" aria-describedby="valOnboardRecycle" aria-label="Recycling share percentage">
                         <div class="range-slider-labels"><span>0% sort</span> <span class="slider-val-display"><span id="valOnboardRecycle">50</span>% recycled</span> <span>100% sort</span></div>
                     </div>
                 </div>
@@ -455,9 +493,11 @@
     <div class="modal-overlay" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyTitle" aria-describedby="apiKeyDesc">
         <div class="glass-card api-modal-card">
             <h2 id="apiKeyTitle">Configure Gemini API Key</h2>
-            <p id="apiKeyDesc" style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem; margin-bottom:1.5rem;">
+            <p id="apiKeyDesc" class="api-modal-desc">
                 Providing a Gemini API key enables deep AI insights directly inside the coach dashboard.
-                <br><strong style="color: var(--warning);">Security Warning:</strong> The key is stored in memory (session storage) and will not persist after closing the browser tab. Entering API keys in client-side applications carries risk if your browser environment is compromised.
+                <br><strong class="api-warning-text">Security:</strong> The key is held in memory only and is
+                <strong>never written to disk, localStorage, or sessionStorage</strong>.
+                It will be lost when you close or refresh this tab. Never share your API key.
             </p>
             <div class="form-group">
                 <label class="form-label" for="geminiApiKeyInput">Gemini API Key</label>

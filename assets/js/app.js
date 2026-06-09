@@ -38,8 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         latestEmissions: null,
         history: [],
         pledges: [],
-        geminiApiKey: sessionStorage.getItem('gemini_api_key') || '',
+        geminiApiKey: '',   // In-memory ONLY — never persisted to storage
         currentStep: 1,
+        isCalculating: false,
 
         // Rendering caching hashes to prevent layout recalculations
         lastRenderedRecommendationsHash: '',
@@ -112,6 +113,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyChartContainer = document.getElementById('historyChartContainer');
     const btnClearHistory = document.getElementById('btnClearHistory');
 
+    // Toast notification helper (replaces alert())
+    const toastEl = (() => {
+        const el = document.createElement('div');
+        el.id = 'appToast';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        el.style.cssText = [
+            'position:fixed', 'bottom:1.5rem', 'left:50%',
+            'transform:translateX(-50%) translateY(20px)',
+            'background:var(--bg-surface)', 'border:1px solid var(--border-color)',
+            'color:var(--text-primary)', 'padding:0.65rem 1.25rem',
+            'border-radius:10px', 'font-size:0.9rem', 'z-index:9999',
+            'box-shadow:var(--shadow-md)', 'opacity:0',
+            'transition:opacity 0.25s,transform 0.25s', 'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    })();
+    let toastTimer = null;
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.style.opacity = '1';
+        toastEl.style.transform = 'translateX(-50%) translateY(0)';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toastEl.style.opacity = '0';
+            toastEl.style.transform = 'translateX(-50%) translateY(20px)';
+        }, 3000);
+    }
+
+    // Screen-reader live region helpers
+    const srStepAnnouncer   = document.getElementById('srStepAnnouncer');
+    const srPledgeAnnouncer = document.getElementById('srPledgeAnnouncer');
+    function announceToSR(regionEl, msg) {
+        if (!regionEl) return;
+        regionEl.textContent = '';
+        // Brief delay ensures AT picks up the change even when content is the same
+        requestAnimationFrame(() => { regionEl.textContent = msg; });
+    }
     // ----------------------------------------------------
     // WCAG Modal dialog & Focus Trap Management
     // ----------------------------------------------------
@@ -121,16 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         open(modalEl) {
             if (this.activeModal) this.close(this.activeModal);
-            
+
             this.previousActiveElement = document.activeElement;
             this.activeModal = modalEl;
             modalEl.classList.add('active');
 
-            // Shift focus inside modal
-            const focusables = modalEl.querySelectorAll('button, input, select, textarea, a');
-            if (focusables.length > 0) {
-                setTimeout(() => focusables[0].focus(), 60);
-            }
+            // Use rAF to shift focus after the transition paint cycle
+            requestAnimationFrame(() => {
+                const focusables = modalEl.querySelectorAll('button, input, select, textarea, a');
+                if (focusables.length > 0) focusables[0].focus();
+            });
         },
 
         close(modalEl) {
@@ -146,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         handleKeyDown(e) {
             if (!this.activeModal) return;
-            
+
             // ESC key closes configuration modals, onboarding is sticky
             if (e.key === 'Escape' && this.activeModal.id !== 'onboardingModal') {
                 this.close(this.activeModal);
@@ -159,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const focusables = Array.from(this.activeModal.querySelectorAll('button, input, select, textarea, a'))
                     .filter(el => !el.disabled && el.tabIndex !== -1);
                 if (focusables.length === 0) return;
-                
+
                 const first = focusables[0];
                 const last = focusables[focusables.length - 1];
 
@@ -197,6 +237,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    /**
+     * Common utility to read and normalize input values from onboarding or sandbox calculator.
+     * Reduces duplication and ensures unified parsing logic.
+     *
+     * @param {string} prefix - Field ID prefix ('onboard' or 'calc')
+     * @returns {Object} Normalized input object for CalcEngine
+     */
+    function readFormInputs(prefix) {
+        const getVal = (idSuffix) => {
+            const el = document.getElementById(prefix + idSuffix);
+            return el ? el.value : '';
+        };
+        const getChecked = (idSuffix) => {
+            const el = document.getElementById(prefix + idSuffix);
+            return el ? el.checked : false;
+        };
+
+        return {
+            carKm: parseFloat(getVal('CarMiles')) || 0,
+            evKm: parseFloat(getVal('EvMiles')) || 0,
+            transitKm: parseFloat(getVal('TransitMiles')) || 0,
+            flightHours: parseFloat(getVal('FlightHours')) || 0,
+            electricityKwh: parseFloat(getVal('Electricity')) || 0,
+            solarPercent: parseFloat(getVal('Solar')) || 0,
+            lpgCylinders: parseFloat(getVal('Gas')) || 0,
+            householdSize: parseInt(getVal('Household'), 10) || 1,
+            dietType: getVal('DietType'),
+            localFood: !!getChecked('LocalFood'),
+            shoppingHabit: getVal('Shopping'),
+            recyclePercent: parseFloat(getVal('Recycle')) || 0
+        };
     }
 
     // ----------------------------------------------------
@@ -245,27 +318,31 @@ document.addEventListener('DOMContentLoaded', () => {
      * so their display values update in real time.
      */
     function setupOnboardingSliders() {
-        const onboardSliders = [
-            { slider: 'onboardCarMiles', display: 'valOnboardCar' },
-            { slider: 'onboardEvMiles', display: 'valOnboardEv' },
-            { slider: 'onboardTransitMiles', display: 'valOnboardTransit' },
-            { slider: 'onboardFlightHours', display: 'valOnboardFlight' },
-            { slider: 'onboardElectricity', display: 'valOnboardElect' },
-            { slider: 'onboardSolar', display: 'valOnboardSolar' },
-            { slider: 'onboardGas', display: 'valOnboardGas' },
-            { slider: 'onboardHousehold', display: 'valOnboardHouse' },
-            { slider: 'onboardRecycle', display: 'valOnboardRecycle' }
-        ];
+        const displayMappings = {
+            'onboardCarMiles': 'valOnboardCar',
+            'onboardEvMiles': 'valOnboardEv',
+            'onboardTransitMiles': 'valOnboardTransit',
+            'onboardFlightHours': 'valOnboardFlight',
+            'onboardElectricity': 'valOnboardElect',
+            'onboardSolar': 'valOnboardSolar',
+            'onboardGas': 'valOnboardGas',
+            'onboardHousehold': 'valOnboardHouse',
+            'onboardRecycle': 'valOnboardRecycle'
+        };
 
-        onboardSliders.forEach(pair => {
-            const sliderEl = document.getElementById(pair.slider);
-            const displayEl = document.getElementById(pair.display);
-            if (sliderEl && displayEl) {
-                sliderEl.addEventListener('input', () => {
-                    displayEl.textContent = sliderEl.value;
-                });
-            }
-        });
+        const onboardingForm = document.getElementById('onboardingForm');
+        if (onboardingForm) {
+            onboardingForm.addEventListener('input', (e) => {
+                const target = e.target;
+                const displayId = displayMappings[target.id];
+                if (displayId) {
+                    const displayEl = document.getElementById(displayId);
+                    if (displayEl) {
+                        displayEl.textContent = target.value;
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -294,6 +371,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btnNextStep.textContent = AppState.currentStep === TOTAL_ONBOARDING_STEPS
             ? 'Finish & Calculate'
             : 'Continue';
+
+        // Announce step to screen readers
+        announceToSR(srStepAnnouncer, `Step ${AppState.currentStep} of ${TOTAL_ONBOARDING_STEPS}`);
     }
 
     /**
@@ -301,23 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * calculation, saves the profile, and transitions to the dashboard.
      */
     function processOnboardingSubmit() {
-        const onboardInputs = {
-            carKm: parseFloat(document.getElementById('onboardCarMiles').value) || 0,
-            evKm: parseFloat(document.getElementById('onboardEvMiles').value) || 0,
-            transitKm: parseFloat(document.getElementById('onboardTransitMiles').value) || 0,
-            flightHours: parseFloat(document.getElementById('onboardFlightHours').value) || 0,
-            electricityKwh: parseFloat(document.getElementById('onboardElectricity').value) || 0,
-            solarPercent: parseFloat(document.getElementById('onboardSolar').value) || 0,
-            lpgCylinders: parseFloat(document.getElementById('onboardGas').value) || 0,
-            householdSize: parseInt(document.getElementById('onboardHousehold').value, 10) || 1,
-            dietType: document.getElementById('onboardDietType').value,
-            localFood: document.getElementById('onboardLocalFood').checked,
-            shoppingHabit: document.getElementById('onboardShopping').value,
-            recyclePercent: parseFloat(document.getElementById('onboardRecycle').value) || 0
-        };
+        const onboardInputs = readFormInputs('onboard');
 
-        const username = document.getElementById('onboardName').value.trim() || 'Eco Pioneer';
-        const carbonGoal = parseFloat(document.getElementById('onboardGoal').value) || DEFAULT_CARBON_GOAL;
+        // Cap name to 60 chars to prevent oversized DOM text; strip leading/trailing whitespace
+        const username = (document.getElementById('onboardName').value.trim() || 'Eco Pioneer').slice(0, 60);
+        const carbonGoal = Math.max(0.1, parseFloat(document.getElementById('onboardGoal').value) || DEFAULT_CARBON_GOAL);
 
         // Calculate initial carbon values
         const results = CalcEngine.calculate(onboardInputs);
@@ -361,29 +429,39 @@ document.addEventListener('DOMContentLoaded', () => {
      * smooth feel, and debounces calculation logic.
      */
     function bindSliderSync() {
-        const sliders = [
-            { slider: calcCarMiles, display: document.getElementById('valCarMiles') },
-            { slider: calcEvMiles, display: document.getElementById('valEvMiles') },
-            { slider: calcTransitMiles, display: document.getElementById('valTransitMiles') },
-            { slider: calcFlightHours, display: document.getElementById('valFlightHours') },
-            { slider: calcElectricity, display: document.getElementById('valElectricity') },
-            { slider: calcSolar, display: document.getElementById('valSolar') },
-            { slider: calcGas, display: document.getElementById('valGas') },
-            { slider: calcHousehold, display: document.getElementById('valHousehold') },
-            { slider: calcRecycle, display: document.getElementById('valRecycle') }
-        ];
+        const displayMappings = {
+            'calcCarMiles': 'valCarMiles',
+            'calcEvMiles': 'valEvMiles',
+            'calcTransitMiles': 'valTransitMiles',
+            'calcFlightHours': 'valFlightHours',
+            'calcElectricity': 'valElectricity',
+            'calcSolar': 'valSolar',
+            'calcGas': 'valGas',
+            'calcHousehold': 'valHousehold',
+            'calcRecycle': 'valRecycle'
+        };
 
-        sliders.forEach(pair => {
-            if (!pair.slider || !pair.display) return;
-            pair.slider.addEventListener('input', () => {
-                pair.display.textContent = pair.slider.value;
-                debouncedSandboxChange();
+        const calculatorForm = document.getElementById('calculatorForm');
+        if (calculatorForm) {
+            calculatorForm.addEventListener('input', (e) => {
+                const target = e.target;
+                const displayId = displayMappings[target.id];
+                if (displayId) {
+                    const displayEl = document.getElementById(displayId);
+                    if (displayEl) {
+                        displayEl.textContent = target.value;
+                    }
+                    debouncedSandboxChange();
+                }
             });
-        });
 
-        calcDietType.addEventListener('change', debouncedSandboxChange);
-        calcLocalFood.addEventListener('change', debouncedSandboxChange);
-        calcShopping.addEventListener('change', debouncedSandboxChange);
+            calculatorForm.addEventListener('change', (e) => {
+                const target = e.target;
+                if (target.id === 'calcDietType' || target.id === 'calcLocalFood' || target.id === 'calcShopping') {
+                    debouncedSandboxChange();
+                }
+            });
+        }
     }
 
     /**
@@ -403,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Save state
             StorageLayer.saveEmissionsEntry(results);
             AppState.latestEmissions = results;
+            AppState.history = StorageLayer.getHistory(); // Keep history cache synchronized
 
             // Render updates
             updateDashboard();
@@ -416,20 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {Object} Input object compatible with CalcEngine.calculate()
      */
     function getSandboxInputs() {
-        return {
-            carKm: parseFloat(calcCarMiles.value) || 0,
-            evKm: parseFloat(calcEvMiles.value) || 0,
-            transitKm: parseFloat(calcTransitMiles.value) || 0,
-            flightHours: parseFloat(calcFlightHours.value) || 0,
-            electricityKwh: parseFloat(calcElectricity.value) || 0,
-            solarPercent: parseFloat(calcSolar.value) || 0,
-            lpgCylinders: parseFloat(calcGas.value) || 0,
-            householdSize: parseInt(calcHousehold.value, 10) || 1,
-            dietType: calcDietType.value,
-            localFood: calcLocalFood.checked,
-            shoppingHabit: calcShopping.value,
-            recyclePercent: parseFloat(calcRecycle.value) || 0
-        };
+        return readFormInputs('calc');
     }
 
     /**
@@ -474,43 +540,65 @@ document.addEventListener('DOMContentLoaded', () => {
      * renders DOM nodes to minimize painting performance overheads.
      */
     function updateDashboard() {
-        AppState.profile = StorageLayer.getProfile();
-        AppState.latestEmissions = StorageLayer.getLatestEmissions();
-        AppState.history = StorageLayer.getHistory();
-        AppState.pledges = StorageLayer.getPledges();
-
+        // Use already-loaded AppState — avoid redundant storage reads on hot render path
         const profile = AppState.profile;
-        const latest = AppState.latestEmissions;
+        const latest  = AppState.latestEmissions;
         if (!profile || !latest) return;
 
-        // Welcome & Header Metrics
-        welcomeUser.textContent = `Welcome, ${profile.name}`;
-        userGoalDisplay.textContent = profile.carbonGoal.toFixed(1);
-        valCurrentFootprint.innerHTML = `${escapeHtml(latest.total.toFixed(1))} <span>t/yr</span>`;
-        valGoalFootprint.innerHTML = `${escapeHtml(profile.carbonGoal.toFixed(1))} <span>t/yr</span>`;
+        // Simple DOM guards to avoid unnecessary layout calculations and thrashing
+        const welcomeText = `Welcome, ${profile.name}`;
+        if (welcomeUser.textContent !== welcomeText) {
+            welcomeUser.textContent = welcomeText;
+        }
 
-        // Status indicator
+        const goalText = profile.carbonGoal.toFixed(1);
+        if (userGoalDisplay.textContent !== goalText) {
+            userGoalDisplay.textContent = goalText;
+        }
+
+        const currentFootprintHTML = `${escapeHtml(latest.total.toFixed(1))} <span>t/yr</span>`;
+        if (valCurrentFootprint.innerHTML !== currentFootprintHTML) {
+            valCurrentFootprint.innerHTML = currentFootprintHTML;
+        }
+
+        const goalFootprintHTML = `${escapeHtml(profile.carbonGoal.toFixed(1))} <span>t/yr</span>`;
+        if (valGoalFootprint.innerHTML !== goalFootprintHTML) {
+            valGoalFootprint.innerHTML = goalFootprintHTML;
+        }
+
+        // Status indicator — pure class toggle, no inline style
         const diff = latest.total - profile.carbonGoal;
-        if (diff <= 0) {
-            valFootprintStatus.className = 'metric-value tier-eco-champion';
-            valFootprintStatus.textContent = 'On Target ✅';
-            valFootprintStatus.style.color = '';
-        } else {
-            valFootprintStatus.className = 'metric-value';
-            valFootprintStatus.style.color = 'var(--warning)';
-            valFootprintStatus.textContent = 'Over Target ⚠️';
+        const targetClass = diff <= 0 ? 'metric-value tier-eco-champion' : 'metric-value status-over-target';
+        const targetHTML = diff <= 0 
+            ? '<span aria-hidden="true">✅</span><span class="sr-only">On Target</span> On Target'
+            : '<span aria-hidden="true">⚠️</span><span class="sr-only">Over Target</span> Over Target';
+
+        if (valFootprintStatus.className !== targetClass) {
+            valFootprintStatus.className = targetClass;
+        }
+        if (valFootprintStatus.innerHTML !== targetHTML) {
+            valFootprintStatus.innerHTML = targetHTML;
         }
 
         // Navigation Displays
-        navPointsDisplay.textContent = profile.ecoPoints;
-        navTierDisplay.className = `tier-text ${getTierClass(profile.ecoTier)}`;
-        navTierDisplay.textContent = profile.ecoTier;
+        const pointsText = String(profile.ecoPoints);
+        if (navPointsDisplay.textContent !== pointsText) {
+            navPointsDisplay.textContent = pointsText;
+        }
 
-        // Progress bars and Breakdown Category Labels (Direct DOM node updates)
-        updateCategoryRow(latest.categories.transport, latest.percentages.transport, barTransport, labelTransportCo2, labelTransportPct);
-        updateCategoryRow(latest.categories.energy, latest.percentages.energy, barEnergy, labelEnergyCo2, labelEnergyPct);
-        updateCategoryRow(latest.categories.food, latest.percentages.food, barFood, labelFoodCo2, labelFoodPct);
-        updateCategoryRow(latest.categories.waste, latest.percentages.waste, barWaste, labelWasteCo2, labelWastePct);
+        const tierClass = `tier-text ${getTierClass(profile.ecoTier)}`;
+        if (navTierDisplay.className !== tierClass) {
+            navTierDisplay.className = tierClass;
+        }
+        if (navTierDisplay.textContent !== profile.ecoTier) {
+            navTierDisplay.textContent = profile.ecoTier;
+        }
+
+        // Progress bars and Breakdown Category Labels
+        updateCategoryRow(latest.categories.transport, latest.percentages.transport, barTransport, labelTransportCo2, labelTransportPct, 'trackTransport');
+        updateCategoryRow(latest.categories.energy,    latest.percentages.energy,    barEnergy,    labelEnergyCo2,    labelEnergyPct,    'trackEnergy');
+        updateCategoryRow(latest.categories.food,      latest.percentages.food,      barFood,      labelFoodCo2,      labelFoodPct,      'trackFood');
+        updateCategoryRow(latest.categories.waste,     latest.percentages.waste,     barWaste,     labelWasteCo2,     labelWastePct,     'trackWaste');
 
         // Update recommendations list (uses smart DOM reconcile)
         updateRecommendations(latest.percentages);
@@ -518,8 +606,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update History Chart (uses smart DOM reconcile)
         updateHistoryChart();
 
-        // Check AI Caching System
-        checkAICacheStatus(latest.total);
+        // Check AI Cache status — but NOT during slider drag (history length changes = full load only)
+        if (AppState.history.length !== AppState.lastRenderedHistoryLength) {
+            checkAICacheStatus(latest.total);
+        }
     }
 
     /**
@@ -531,11 +621,32 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {HTMLElement} co2El - Tonnes display element
      * @param {HTMLElement} pctEl - Percentage display element
      */
-    function updateCategoryRow(co2, pct, barEl, co2El, pctEl) {
+    function updateCategoryRow(co2, pct, barEl, co2El, pctEl, trackId) {
         if (!barEl || !co2El || !pctEl) return;
-        co2El.textContent = co2.toFixed(1);
-        pctEl.textContent = Math.round(pct);
-        barEl.style.width = `${pct}%`;
+        const rounded = Math.round(pct);
+        
+        // Simple DOM guards to avoid unnecessary layout calculations
+        const co2Text = co2.toFixed(1);
+        if (co2El.textContent !== co2Text) {
+            co2El.textContent = co2Text;
+        }
+
+        const pctText = String(rounded);
+        if (pctEl.textContent !== pctText) {
+            pctEl.textContent = pctText;
+        }
+
+        const widthStyle = `${pct}%`;
+        if (barEl.style.width !== widthStyle) {
+            barEl.style.width = widthStyle;
+        }
+
+        if (trackId) {
+            const track = document.getElementById(trackId);
+            if (track && track.getAttribute('aria-valuenow') !== pctText) {
+                track.setAttribute('aria-valuenow', pctText);
+            }
+        }
     }
 
     /**
@@ -609,10 +720,9 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryBadge.className = `pledge-category ${escapeHtml(rec.category)}`;
         categoryBadge.textContent = rec.category;
 
-        // Title
+        // Title — margin-top handled by .pledge-title CSS class (no inline style)
         const title = document.createElement('h3');
         title.className = 'pledge-title';
-        title.style.marginTop = '0.35rem';
         title.textContent = rec.title;
 
         // Description
@@ -639,6 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
         commitBtn.type = 'button';
         commitBtn.textContent = 'Commit';
         commitBtn.dataset.id = rec.id;
+        commitBtn.setAttribute('aria-label', `Commit to pledge: ${rec.title}`);
 
         card.appendChild(info);
         card.appendChild(commitBtn);
@@ -653,16 +764,17 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function commitPledge(pledge) {
         StorageLayer.togglePledge(pledge.id, 'active');
-        
-        // Reload values
-        AppState.latestEmissions = StorageLayer.getLatestEmissions();
+
+        // Only re-read pledges (the only thing that changed)
         AppState.pledges = StorageLayer.getPledges();
-        AppState.profile = StorageLayer.getProfile();
 
         if (AppState.latestEmissions) {
             updateRecommendations(AppState.latestEmissions.percentages);
         }
         navPointsDisplay.textContent = AppState.profile.ecoPoints;
+
+        // Announce pledge commit to screen readers
+        announceToSR(srPledgeAnnouncer, `Pledge committed: ${pledge.title}. Eco-Points updated.`);
     }
 
     // ----------------------------------------------------
@@ -728,14 +840,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const barFill = document.createElement('div');
             barFill.className = 'chart-bar-fill';
             barFill.style.height = `${percentHeight}%`;
+            // Accessible label so AT reads each bar
+            barWrapper.setAttribute('aria-label', `${shortDate}: ${h.total.toFixed(1)} tonnes CO₂e`);
 
             const tooltip = document.createElement('div');
             tooltip.className = 'chart-bar-tooltip';
+            tooltip.setAttribute('aria-hidden', 'true');
             tooltip.textContent = `${h.total.toFixed(1)} tonnes`;
             barFill.appendChild(tooltip);
 
             const label = document.createElement('div');
             label.className = 'chart-label';
+            label.setAttribute('aria-hidden', 'true');
             label.textContent = shortDate;
 
             barWrapper.appendChild(barFill);
@@ -772,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cacheStatusBadge.style.color = 'var(--primary-light)';
 
             // Display cached advice
-            coachAdviceBox.innerHTML = formatAdviceMarkdown(cache.insights);
+            coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(cache.insights);
         }
     }
 
@@ -793,7 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!profile || !latest) return;
 
         if (!needsRefresh && cache) {
-            coachAdviceBox.innerHTML = formatAdviceMarkdown(cache.insights);
+            coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(cache.insights);
             cacheStatusBadge.textContent = 'Cached';
             cacheStatusBadge.style.color = 'var(--primary-light)';
             return;
@@ -803,7 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!AppState.geminiApiKey) {
             StorageLayer.setAICache(localAdvice, currentTotal);
-            coachAdviceBox.innerHTML = formatAdviceMarkdown(localAdvice);
+            coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(localAdvice);
             cacheStatusBadge.textContent = 'Local Sync';
             cacheStatusBadge.style.color = 'var(--text-muted)';
             return;
@@ -825,40 +941,19 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const aiAdvice = await AICoach.getRemoteAdvice(AppState.geminiApiKey, latest, profile.carbonGoal);
             StorageLayer.setAICache(aiAdvice, currentTotal);
-            coachAdviceBox.innerHTML = formatAdviceMarkdown(aiAdvice);
+            coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(aiAdvice);
             cacheStatusBadge.textContent = 'Gemini Sync';
             cacheStatusBadge.style.color = 'var(--accent)';
         } catch (err) {
             Logger.error('Gemini API request failed, loading local advice:', err);
             StorageLayer.setAICache(localAdvice, currentTotal);
-            coachAdviceBox.innerHTML = formatAdviceMarkdown(localAdvice);
+            coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(localAdvice);
             cacheStatusBadge.textContent = 'Offline Fallback';
             cacheStatusBadge.style.color = 'var(--danger)';
         }
     }
 
-    /**
-     * Converts basic markdown formatting to safe HTML.
-     * Sanitizes the input string first, then applies safe transformations.
-     *
-     * @param {string} markdown - Markdown text to format
-     * @returns {string} Sanitized HTML string
-     */
-    function formatAdviceMarkdown(markdown) {
-        if (!markdown) return '';
 
-        // First sanitize the raw string to prevent XSS
-        let safe = escapeHtml(markdown);
-
-        // Apply safe markdown transformations on escaped content
-        safe = safe
-            .replace(/### (.*)/g, '<h3 class="coach-heading">$1</h3>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\n\n/g, '<br><br>');
-
-        return safe;
-    }
 
     // ----------------------------------------------------
     // Event Bindings
@@ -868,11 +963,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * Registers click and interaction event listeners.
      */
     function bindEvents() {
-        // Logo click
+        // Logo click — styled toast instead of alert()
         document.getElementById('navLogo').addEventListener('click', () => {
             const profile = StorageLayer.getProfile();
             if (profile) {
-                alert(`FootprintCO2 active profile: ${profile.name} (Tier: ${profile.ecoTier})`);
+                showToast(`👤 ${profile.name}  ·  Tier: ${profile.ecoTier}  ·  🌿 ${profile.ecoPoints} pts`);
             }
         });
 
@@ -929,14 +1024,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ModalManager.close(apiKeyModal);
         });
 
-        // API Key Settings Modal — Save
+        // API Key Settings Modal — Save (in-memory only — no storage write)
         btnApiKeySave.addEventListener('click', () => {
             AppState.geminiApiKey = geminiApiKeyInput.value.trim();
-            if (AppState.geminiApiKey) {
-                sessionStorage.setItem('gemini_api_key', AppState.geminiApiKey);
-            } else {
-                sessionStorage.removeItem('gemini_api_key');
-            }
             ModalManager.close(apiKeyModal);
 
             // Regenerate AI advice with new key
@@ -946,12 +1036,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // History reset
+        // History reset — in-page confirmation toast instead of confirm()
         btnClearHistory.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear your carbon history and profile? FootprintCO2 will reload.')) {
+            if (btnClearHistory.dataset.confirmPending === 'true') {
+                // Second click confirms
                 StorageLayer.clearAll();
-                sessionStorage.removeItem('gemini_api_key');
+                AppState.geminiApiKey = ''; // Clear in-memory key on data reset
                 window.location.reload();
+            } else {
+                btnClearHistory.dataset.confirmPending = 'true';
+                btnClearHistory.textContent = 'Tap again to confirm erase';
+                btnClearHistory.classList.add('btn-danger-confirm');
+                showToast('⚠️ Click “Tap again to confirm erase” to permanently delete all data.');
+                setTimeout(() => {
+                    btnClearHistory.dataset.confirmPending = 'false';
+                    btnClearHistory.textContent = 'Reset Data';
+                    btnClearHistory.classList.remove('btn-danger-confirm');
+                }, 5000);
             }
         });
     }

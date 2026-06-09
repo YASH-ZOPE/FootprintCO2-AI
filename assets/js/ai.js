@@ -132,6 +132,46 @@ Rules:
             Logger.error("AI Coach API call failed:", error);
             throw error; // Let app handle fallback display
         }
+    },
+
+    /**
+     * Escapes HTML special characters to prevent XSS.
+     * Pure function that does not rely on browser DOM, ensuring testability in Node.js.
+     *
+     * @param {string} str - Raw string to escape
+     * @returns {string} Escaped safe string
+     */
+    escapeHtml(str) {
+        if (typeof str !== 'string') return String(str);
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    /**
+     * Converts basic markdown formatting to safe HTML.
+     * Sanitizes the input string first, then applies safe transformations.
+     *
+     * @param {string} markdown - Markdown text to format
+     * @returns {string} Sanitized HTML string
+     */
+    formatAdviceMarkdown(markdown) {
+        if (!markdown) return '';
+
+        // First sanitize the raw string to prevent XSS
+        let safe = this.escapeHtml(markdown);
+
+        // Apply safe markdown transformations on escaped content
+        safe = safe
+            .replace(/### (.*)/g, '<div class="coach-heading"><strong>$1</strong></div>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\n/g, '<br><br>');
+
+        return safe;
     }
 };
 

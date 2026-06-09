@@ -64,14 +64,14 @@ const CalcEngine = {
     calculate(inputs) {
         // Default safe fallbacks
         const data = {
-            carKm: Math.max(0, parseFloat(inputs.carKm) || 0),
-            evKm: Math.max(0, parseFloat(inputs.evKm) || 0),
-            transitKm: Math.max(0, parseFloat(inputs.transitKm) || 0),
-            flightHours: Math.max(0, parseFloat(inputs.flightHours) || 0),
-            electricityKwh: Math.max(0, parseFloat(inputs.electricityKwh) || 0),
+            carKm: Math.min(10000, Math.max(0, parseFloat(inputs.carKm) || 0)),
+            evKm: Math.min(10000, Math.max(0, parseFloat(inputs.evKm) || 0)),
+            transitKm: Math.min(10000, Math.max(0, parseFloat(inputs.transitKm) || 0)),
+            flightHours: Math.min(1000, Math.max(0, parseFloat(inputs.flightHours) || 0)),
+            electricityKwh: Math.min(100000, Math.max(0, parseFloat(inputs.electricityKwh) || 0)),
             solarPercent: Math.min(100, Math.max(0, parseFloat(inputs.solarPercent) || 0)),
-            lpgCylinders: Math.max(0, parseFloat(inputs.lpgCylinders) || 0),
-            householdSize: Math.max(1, parseInt(inputs.householdSize) || 1),
+            lpgCylinders: Math.min(100, Math.max(0, parseFloat(inputs.lpgCylinders) || 0)),
+            householdSize: Math.min(100, Math.max(1, parseInt(inputs.householdSize) || 1)),
             dietType: inputs.dietType || 'average',
             localFood: !!inputs.localFood,
             shoppingHabit: inputs.shoppingHabit || 'medium',

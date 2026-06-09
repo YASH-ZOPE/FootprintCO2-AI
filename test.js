@@ -258,6 +258,95 @@ runTest("Engine configurations and threshold constants are correctly structured"
     assert.ok(srcStr.includes('GEMINI_MODEL'), 'getRemoteAdvice must reference the GEMINI_MODEL constant');
 });
 
+
+// -------------------------------------------------------
+// New Test 10: formatAdviceMarkdown XSS Safety
+// -------------------------------------------------------
+runTest("formatAdviceMarkdown neutralizes XSS payloads and preserves valid markdown", () => {
+    ["<script>alert(1)</script>", "<img src=x onerror=alert(1)>"].forEach(p => {
+        const o = AICoach.formatAdviceMarkdown(p);
+        assert.ok(!o.includes("<script"), "script tag must be escaped");
+        assert.ok(o.includes("&lt;"), "raw < bracket must be escaped in output");
+    });
+    const o = AICoach.formatAdviceMarkdown("### Title\n\n**bold** *italic*");
+    assert.ok(o.includes("coach-heading"), "coach-heading class must render");
+    assert.ok(o.includes("<strong>Title</strong>"), "heading content must be nested in strong tags");
+    assert.ok(o.includes("<strong>bold</strong>"), "strong must render");
+    assert.ok(o.includes("<em>italic</em>"),     "em must render");
+});
+
+// -------------------------------------------------------
+// New Test 11: History cap enforcement
+// -------------------------------------------------------
+runTest("StorageLayer enforces MAX_HISTORY_ENTRIES cap", () => {
+    resetLocalStorage();
+    const inp = { carKm:100, evKm:0, transitKm:20, flightHours:2, electricityKwh:200,
+        solarPercent:10, lpgCylinders:2, householdSize:3, dietType:"average",
+        localFood:false, shoppingHabit:"medium", recyclePercent:30 };
+    for (let i = 0; i < 13; i++) StorageLayer.saveEmissionsEntry(CalcEngine.calculate(inp));
+    const h = StorageLayer.getHistory();
+    assert.ok(h.length <= StorageLayer.MAX_HISTORY_ENTRIES,
+        "History must be capped at " + StorageLayer.MAX_HISTORY_ENTRIES + ", got " + h.length);
+});
+
+// -------------------------------------------------------
+// New Test 12: Pledge lifecycle
+// -------------------------------------------------------
+runTest("StorageLayer togglePledge correctly sets pledge status to active", () => {
+    resetLocalStorage();
+    StorageLayer.togglePledge("p_led_bulbs", "active");
+    const pledges = StorageLayer.getPledges();
+    const pledge = pledges.find(p => p.pledgeId === "p_led_bulbs");
+    assert.ok(pledge,                           "Pledge must exist after toggle");
+    assert.strictEqual(pledge.status, "active", "Pledge status must be active");
+    assert.ok(pledge.startDate,                 "Pledge must carry a startDate timestamp");
+});
+
+// -------------------------------------------------------
+// New Test 13: AICoach output quality across all 4 categories
+// -------------------------------------------------------
+runTest("AICoach.generateLocalInsight gives Indian-context data-driven output for all 4 categories", () => {
+    const cases = [
+        { cat:"transport", data:{total:8,categories:{transport:5,energy:1.5,food:1,waste:0.5},percentages:{transport:62,energy:19,food:12,waste:7}},  keyword:"Metro"  },
+        { cat:"energy",    data:{total:6,categories:{transport:0.5,energy:4,food:1,waste:0.5},percentages:{transport:8,energy:67,food:17,waste:8}},   keyword:"BEE"    },
+        { cat:"food",      data:{total:4.5,categories:{transport:0.5,energy:0.8,food:2.8,waste:0.4},percentages:{transport:11,energy:18,food:62,waste:9}}, keyword:"mandi"  },
+        { cat:"waste",     data:{total:5.5,categories:{transport:0.5,energy:0.8,food:0.8,waste:3.4},percentages:{transport:9,energy:15,food:15,waste:61}},keyword:"Swachh" },
+    ];
+    cases.forEach(function(c) {
+        const out = AICoach.generateLocalInsight(c.data, 2.0);
+        assert.ok(out.length > 100,               c.cat + ": output must be substantive");
+        assert.ok(/\d+\.\d+ t/.test(out),        c.cat + ": must have concrete tonne savings");
+        assert.ok(out.includes(c.keyword),        c.cat + ": must include " + c.keyword);
+        assert.ok(out.includes("goal") || out.includes("target"), c.cat + ": must mention goal");
+    });
+});
+// -------------------------------------------------------
+// New Test 14: Adversarial, NaN, and Out-of-bounds Inputs Clamping
+// -------------------------------------------------------
+runTest("CalcEngine safely handles NaN, undefined, negative values, and Infinity values without crashing", () => {
+    const inputs = {
+        carKm: NaN,
+        evKm: undefined,
+        transitKm: -50,
+        flightHours: Infinity,
+        electricityKwh: 200,
+        solarPercent: 120, // should clamp to 100
+        lpgCylinders: NaN,
+        householdSize: -2,  // should clamp to minimum 1
+        dietType: 'unknown_diet_type',
+        localFood: false,
+        shoppingHabit: 'very_bad_freq',
+        recyclePercent: -30 // should clamp to 0
+    };
+    const results = CalcEngine.calculate(inputs);
+    
+    assert.ok(results.total >= 0, "Carbon total should remain a valid non-negative number");
+    assert.ok(!isNaN(results.total), "Total must not be NaN");
+    assert.strictEqual(results.categories.transport, 90.0, "Transport emissions should clamp Infinity flightHours to 1000 hrs (1000 * 0.09 = 90.0) and other negative/NaN inputs to 0");
+    assert.strictEqual(results.categories.waste, 1.20, "Waste should fall back to medium levels and ignore negative recycling rate");
+    assert.ok(results.categories.energy >= 0, "Energy emissions should be valid and clamp inputs to safe limits");
+});
+
 console.log("\n==========================================");
 console.log(`🎉 ALL ${passedTestsCount} TESTS COMPLETED SUCCESSFULLY!`);
 console.log("==========================================\n");
