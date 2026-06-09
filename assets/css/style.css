@@ -1281,3 +1281,23 @@ a:hover {
         max-width: 90%;
     }
 }
+
+/* Custom categories / styles to comply with CSP style-src (removing inline styles) */
+.sandbox-section-title {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.sandbox-section-title.transport-title {
+    color: var(--accent);
+}
+.sandbox-section-title.energy-title {
+    color: var(--warning);
+}
+.sandbox-section-title.food-title {
+    color: var(--primary-light);
+}
+.sandbox-section-title.waste-title {
+    color: hsl(270, 80%, 75%);
+}

@@ -200,7 +200,7 @@ FootprintCO2 AI is designed with **efficiency and cost optimization as core prin
 | **Summarized payloads** | Only category totals and goal are sent to Gemini — never raw input logs |
 | **Response caching** | AI advice is cached in LocalStorage and reused across sessions |
 | **Change threshold** | Cache is refreshed only when footprint changes by **>15%** or on manual request |
-| **Output limiting** | Gemini is instructed to produce 3–4 sentences (under 120 words) with `maxOutputTokens: 200` |
+| **Output limiting** | Gemini is instructed to produce 3–4 sentences (under 120 words) |
 | **Offline fallback** | Template-based local advice serves immediately if API is unavailable |
 
 **Result:** The average user triggers zero AI calls during normal calculator interactions. AI is invoked only for deep personalization on explicit request.
@@ -214,7 +214,7 @@ FootprintCO2 AI is designed with **efficiency and cost optimization as core prin
 | **Frontend** | HTML5, CSS3, JavaScript (ES6+) |
 | **Typography** | Google Fonts (Outfit, Inter) |
 | **Storage** | HTML5 LocalStorage |
-| **AI** | Google Gemini 1.5 Flash API |
+| **AI** | Google Gemini 2.5 Flash API |
 | **Hosting** | GitHub Pages |
 | **Testing** | Node.js native `assert` module |
 

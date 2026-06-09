@@ -95,7 +95,7 @@
                     <div class="grid-cols-2">
                         <!-- Transport Sliders -->
                         <div class="glass-card glass-card-sub">
-                            <h3 style="color: var(--accent); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
+                            <h3 class="sandbox-section-title transport-title">
                                 🚗 Transportation
                             </h3>
                             <div class="form-group range-slider-container">
@@ -142,7 +142,7 @@
 
                         <!-- Household Energy Sliders -->
                         <div class="glass-card glass-card-sub">
-                            <h3 style="color: var(--warning); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
+                            <h3 class="sandbox-section-title energy-title">
                                 ⚡ Home Energy
                             </h3>
                             <div class="form-group range-slider-container">
@@ -191,7 +191,7 @@
                     <div class="grid-cols-2 grid-margin-top">
                         <!-- Food Decisions -->
                         <div class="glass-card glass-card-sub">
-                            <h3 style="color: var(--primary-light); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
+                            <h3 class="sandbox-section-title food-title">
                                 🥦 Diet & Groceries
                             </h3>
                             <div class="form-group">
@@ -213,7 +213,7 @@
 
                         <!-- Waste Decisions -->
                         <div class="glass-card glass-card-sub">
-                            <h3 style="color: hsl(270, 80%, 75%); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
+                            <h3 class="sandbox-section-title waste-title">
                                 ♻️ Waste & Shopping
                             </h3>
                             <div class="form-group">
@@ -287,7 +287,7 @@
                          aria-label="Transportation emissions"
                          aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
                          id="trackTransport">
-                        <div class="progress-bar-fill transport" id="barTransport" style="width: 0%;"></div>
+                        <div class="progress-bar-fill transport" id="barTransport"></div>
                     </div>
                     
                     <div class="progress-bar-label label-spacing">
@@ -299,7 +299,7 @@
                          aria-label="Home Energy emissions"
                          aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
                          id="trackEnergy">
-                        <div class="progress-bar-fill energy" id="barEnergy" style="width: 0%;"></div>
+                        <div class="progress-bar-fill energy" id="barEnergy"></div>
                     </div>
 
                     <div class="progress-bar-label label-spacing">
@@ -311,7 +311,7 @@
                          aria-label="Diet and Food emissions"
                          aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
                          id="trackFood">
-                        <div class="progress-bar-fill food" id="barFood" style="width: 0%;"></div>
+                        <div class="progress-bar-fill food" id="barFood"></div>
                     </div>
 
                     <div class="progress-bar-label label-spacing">
@@ -323,7 +323,7 @@
                          aria-label="Waste and Shopping emissions"
                          aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
                          id="trackWaste">
-                        <div class="progress-bar-fill waste" id="barWaste" style="width: 0%;"></div>
+                        <div class="progress-bar-fill waste" id="barWaste"></div>
                     </div>
                 </div>
             </div>

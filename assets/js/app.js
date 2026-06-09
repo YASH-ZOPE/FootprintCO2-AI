@@ -948,7 +948,22 @@ document.addEventListener('DOMContentLoaded', () => {
             Logger.error('Gemini API request failed, loading local advice:', err);
             StorageLayer.setAICache(localAdvice, currentTotal);
             coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(localAdvice);
-            cacheStatusBadge.textContent = 'Offline Fallback';
+
+            // Show user-friendly error detail
+            const errMsg = err.message || String(err);
+            if (errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+                cacheStatusBadge.textContent = 'Rate Limited';
+                showToast('⚠️ API quota exceeded. Showing local advice. Try again in ~60s.');
+            } else if (errMsg.includes('403') || errMsg.includes('API_KEY_INVALID')) {
+                cacheStatusBadge.textContent = 'Invalid Key';
+                showToast('❌ API key is invalid. Please re-enter in API Key settings.');
+            } else if (errMsg.includes('404')) {
+                cacheStatusBadge.textContent = 'Model Error';
+                showToast('❌ AI model not found. Please report this issue.');
+            } else {
+                cacheStatusBadge.textContent = 'Offline Fallback';
+                showToast('⚠️ AI Coach failed: ' + errMsg.slice(0, 80));
+            }
             cacheStatusBadge.style.color = 'var(--danger)';
         }
     }
