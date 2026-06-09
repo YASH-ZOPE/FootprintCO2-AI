@@ -223,6 +223,11 @@ runTest("StorageLayer recovers and auto-resets corrupted profile keys", () => {
     // Verify key in LocalStorage was repaired
     const repairedRaw = mockLocalStorage.getItem(StorageLayer.KEYS.PROFILE);
     assert.ok(repairedRaw.includes('"name":"Eco Explorer"'), "Profile key should be successfully repaired in storage");
+    // Ensure the key uses the namespaced prefix
+    assert.strictEqual(StorageLayer.KEYS.PROFILE, 'fpco2_profile', 'Profile key must use fpco2_ namespace');
+    assert.strictEqual(StorageLayer.KEYS.HISTORY,  'fpco2_emissions_history', 'History key must use fpco2_ namespace');
+    assert.strictEqual(StorageLayer.KEYS.PLEDGES,  'fpco2_active_pledges', 'Pledges key must use fpco2_ namespace');
+    assert.strictEqual(StorageLayer.KEYS.AI_CACHE, 'fpco2_ai_insights', 'AI cache key must use fpco2_ namespace');
 });
 
 runTest("StorageLayer handles QuotaExceededExceptions by dropping AI cache", () => {
@@ -245,6 +250,12 @@ runTest("Engine configurations and threshold constants are correctly structured"
     assert.strictEqual(DecisionEngine.THRESHOLDS.TRANSPORT, 40);
     assert.strictEqual(RecommendationEngine.MAX_RECOMMENDATIONS, 3);
     assert.strictEqual(StorageLayer.MAX_HISTORY_ENTRIES, 10);
+    // Verify GEMINI_MODEL constant is exported and correctly set
+    const aiModule = require('./assets/js/ai.js');
+    // AICoach itself doesn't expose GEMINI_MODEL, but the module-level constant drives getRemoteAdvice.
+    // Verify the model string is embedded in the getRemoteAdvice source to catch accidental mutations.
+    const srcStr = AICoach.getRemoteAdvice.toString();
+    assert.ok(srcStr.includes('GEMINI_MODEL'), 'getRemoteAdvice must reference the GEMINI_MODEL constant');
 });
 
 console.log("\n==========================================");

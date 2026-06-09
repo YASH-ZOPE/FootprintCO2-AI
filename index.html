@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Content Security Policy: restrict loading to same origin; allow Google Fonts & Gemini API -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com; img-src 'self' data:;">
 </head>
 <body>
 
@@ -40,7 +42,7 @@
     </header>
 
     <!-- Main Dashboard Container -->
-    <main class="container dashboard-grid" id="mainDashboard">
+    <main class="container dashboard-grid" id="mainDashboard" tabindex="-1">
         
         <!-- Left Column: Interactive Tools -->
         <section class="dashboard-main" aria-label="Interactive Controls">
@@ -49,22 +51,22 @@
             <div class="glass-card hero-card" id="welcomeCard">
                 <div>
                     <h1 id="welcomeUser">Welcome Back, Eco Explorer</h1>
-                    <p style="color: var(--text-secondary); margin-top: 0.25rem;">
+                    <p class="hero-subtitle">
                         Let's work together to hit your goal of <strong id="userGoalDisplay">2.0</strong> tCO₂e/yr.
                     </p>
                 </div>
                 <div class="hero-metrics">
                     <div class="metric-item">
                         <span class="metric-label">Current Footprint</span>
-                        <div class="metric-value" id="valCurrentFootprint">0.0 <span>t/yr</span></div>
+                        <div class="metric-value" id="valCurrentFootprint" aria-live="polite" aria-atomic="true">0.0 <span>t/yr</span></div>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">Goal Target</span>
-                        <div class="metric-value" id="valGoalFootprint">2.0 <span>t/yr</span></div>
+                        <div class="metric-value" id="valGoalFootprint" aria-live="polite" aria-atomic="true">2.0 <span>t/yr</span></div>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">Status</span>
-                        <div class="metric-value" id="valFootprintStatus" style="font-size: 1.5rem; display: flex; align-items: center; height: 100%;">
+                        <div class="metric-value status-display-value" id="valFootprintStatus" aria-live="polite" aria-atomic="true">
                             Calculated
                         </div>
                     </div>
@@ -75,7 +77,7 @@
             <div class="glass-card">
                 <div class="pledges-section-header">
                     <h2>Your Top Recommendations</h2>
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">Prioritized by Decision Engine</span>
+                    <span class="subtitle-muted">Prioritized by Decision Engine</span>
                 </div>
                 <div class="pledge-grid" id="recommendationsContainer">
                     <!-- Recommendation cards injected here -->
@@ -92,7 +94,7 @@
                 <form id="calculatorForm">
                     <div class="grid-cols-2">
                         <!-- Transport Sliders -->
-                        <div class="glass-card" style="padding: 1.25rem; background: rgba(255,255,255,0.015);">
+                        <div class="glass-card glass-card-sub">
                             <h3 style="color: var(--accent); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
                                 🚗 Transportation
                             </h3>
@@ -135,7 +137,7 @@
                         </div>
 
                         <!-- Household Energy Sliders -->
-                        <div class="glass-card" style="padding: 1.25rem; background: rgba(255,255,255,0.015);">
+                        <div class="glass-card glass-card-sub">
                             <h3 style="color: var(--warning); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
                                 ⚡ Home Energy
                             </h3>
@@ -178,9 +180,9 @@
                         </div>
                     </div>
 
-                    <div class="grid-cols-2" style="margin-top: 1.5rem;">
+                    <div class="grid-cols-2 grid-margin-top">
                         <!-- Food Decisions -->
-                        <div class="glass-card" style="padding: 1.25rem; background: rgba(255,255,255,0.015);">
+                        <div class="glass-card glass-card-sub">
                             <h3 style="color: var(--primary-light); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
                                 🥦 Diet & Groceries
                             </h3>
@@ -193,16 +195,16 @@
                                     <option value="vegan">Vegan (Entirely plant-based)</option>
                                 </select>
                             </div>
-                            <div class="form-group" style="display:flex; align-items:center; gap:0.5rem; margin-top:1.5rem;">
-                                <input type="checkbox" id="calcLocalFood" style="width:18px; height:18px; cursor:pointer;">
-                                <label class="form-label" for="calcLocalFood" style="margin-bottom:0; cursor:pointer;">
+                            <div class="form-group checkbox-container-inline">
+                                <input type="checkbox" id="calcLocalFood" class="accessible-checkbox">
+                                <label class="form-label checkbox-label" for="calcLocalFood">
                                     Buy mostly local & organic foods
                                 </label>
                             </div>
                         </div>
 
                         <!-- Waste Decisions -->
-                        <div class="glass-card" style="padding: 1.25rem; background: rgba(255,255,255,0.015);">
+                        <div class="glass-card glass-card-sub">
                             <h3 style="color: hsl(270, 80%, 75%); margin-bottom: 1rem; display:flex; align-items:center; gap:0.4rem;">
                                 ♻️ Waste & Shopping
                             </h3>
@@ -241,28 +243,28 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 style="font-size: 1.15rem;">AI Sustainability Coach</h2>
-                        <p style="font-size:0.75rem; color:var(--text-muted);">Real-time personalized coach advice</p>
+                        <h2 class="coach-title">AI Sustainability Coach</h2>
+                        <p class="coach-subtitle">Real-time personalized coach advice</p>
                     </div>
                 </div>
                 <div class="coach-body" id="coachAdviceBox">
                     Initial advice will load after you complete onboarding.
                 </div>
                 <div class="coach-actions">
-                    <button class="btn btn-accent btn-sm" type="button" id="btnRequestAiDeep" style="font-size:0.8rem; padding:0.5rem 1rem;">
+                    <button class="btn btn-accent btn-sm btn-coach-action" type="button" id="btnRequestAiDeep">
                         ⚡ Generate AI Deep Insights
                     </button>
                 </div>
                 <div class="cache-banner">
                     <span>Token Cache System:</span>
-                    <span id="cacheStatusBadge" style="color:var(--primary-light);">Idle</span>
+                    <span id="cacheStatusBadge">Idle</span>
                 </div>
             </div>
 
             <!-- Emissions Breakdown -->
             <div class="glass-card">
                 <h2>Footprint Breakdown</h2>
-                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem;">
+                <p class="sidebar-subtitle">
                     Category contributions to your current footprint.
                 </p>
                 <div class="category-progress">
@@ -275,7 +277,7 @@
                         <div class="progress-bar-fill transport" id="barTransport" style="width: 0%;"></div>
                     </div>
                     
-                    <div class="progress-bar-label" style="margin-top: 0.5rem;">
+                    <div class="progress-bar-label label-spacing">
                         <span>⚡ Home Energy</span>
                         <span><strong id="labelEnergyCo2">0.0</strong> t (<span id="labelEnergyPct">0</span>%)</span>
                     </div>
@@ -283,7 +285,7 @@
                         <div class="progress-bar-fill energy" id="barEnergy" style="width: 0%;"></div>
                     </div>
 
-                    <div class="progress-bar-label" style="margin-top: 0.5rem;">
+                    <div class="progress-bar-label label-spacing">
                         <span>🥦 Diet & Food</span>
                         <span><strong id="labelFoodCo2">0.0</strong> t (<span id="labelFoodPct">0</span>%)</span>
                     </div>
@@ -291,7 +293,7 @@
                         <div class="progress-bar-fill food" id="barFood" style="width: 0%;"></div>
                     </div>
 
-                    <div class="progress-bar-label" style="margin-top: 0.5rem;">
+                    <div class="progress-bar-label label-spacing">
                         <span>♻️ Waste & Shopping</span>
                         <span><strong id="labelWasteCo2">0.0</strong> t (<span id="labelWastePct">0</span>%)</span>
                     </div>
@@ -304,14 +306,14 @@
             <!-- History Chart -->
             <div class="glass-card">
                 <h2>Progress History</h2>
-                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">
+                <p class="chart-subtitle">
                     Your latest carbon levels over time (tCO₂e/yr).
                 </p>
                 <div class="chart-container" id="historyChartContainer">
                     <!-- Dynamic chart bars injected here -->
                 </div>
-                <div class="coach-actions" style="margin-top: 0.75rem;">
-                    <button class="btn btn-secondary" type="button" id="btnClearHistory" style="font-size:0.75rem; padding:0.4rem 0.85rem;">
+                <div class="coach-actions chart-actions">
+                    <button class="btn btn-secondary btn-reset-data" type="button" id="btnClearHistory">
                         Reset Data
                     </button>
                 </div>
@@ -342,7 +344,7 @@
                     <div class="form-group">
                         <label class="form-label" for="onboardGoal">Annual Carbon Target (tonnes CO₂e/year)</label>
                         <input class="form-input" type="number" id="onboardGoal" min="0.5" max="30" step="0.1" value="2.0" required>
-                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
+                        <p class="onboard-goal-sub">
                             Indian national average is ~1.9t. To keep warming under 1.5°C, targets should be under <strong>2.0t</strong>.
                         </p>
                     </div>
@@ -413,9 +415,9 @@
                             <option value="vegan">Vegan (No animal products)</option>
                         </select>
                     </div>
-                    <div class="form-group" style="display:flex; align-items:center; gap:0.5rem; margin-top:2rem;">
-                        <input type="checkbox" id="onboardLocalFood" style="width:18px; height:18px; cursor:pointer;">
-                        <label class="form-label" for="onboardLocalFood" style="margin-bottom:0; cursor:pointer;">
+                    <div class="form-group onboard-diet-sub">
+                        <input type="checkbox" id="onboardLocalFood" class="onboard-diet-checkbox">
+                        <label class="form-label onboard-diet-label" for="onboardLocalFood">
                             I actively buy local and organic produce.
                         </label>
                     </div>
@@ -451,7 +453,7 @@
 
     <!-- API Key Configuration Modal -->
     <div class="modal-overlay" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyTitle" aria-describedby="apiKeyDesc">
-        <div class="glass-card" style="width:100%; max-width:480px;">
+        <div class="glass-card api-modal-card">
             <h2 id="apiKeyTitle">Configure Gemini API Key</h2>
             <p id="apiKeyDesc" style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem; margin-bottom:1.5rem;">
                 Providing a Gemini API key enables deep AI insights directly inside the coach dashboard.
@@ -461,16 +463,16 @@
                 <label class="form-label" for="geminiApiKeyInput">Gemini API Key</label>
                 <input class="form-input" type="password" id="geminiApiKeyInput" placeholder="AIzaSy...">
             </div>
-            <div class="step-nav" style="margin-top:1.5rem; border-top:none; padding-top:0;">
+            <div class="step-nav api-modal-nav">
                 <button class="btn btn-secondary" type="button" id="btnApiKeyCancel">Cancel</button>
                 <button class="btn btn-primary" type="button" id="btnApiKeySave">Save Key</button>
             </div>
         </div>
     </div>
 
-    <footer style="margin:4rem 0 2rem; text-align:center; color:var(--text-muted); font-size:0.8rem;">
+    <footer class="footer-container">
         <p>FootprintCO2 AI &copy; 2026. Made with &hearts; for the Planet.</p>
-        <p style="margin-top:0.25rem;">Rules-based Decision Engine &bull; Token Optimized AI Coaching</p>
+        <p class="footer-subtext">Rules-based Decision Engine &bull; Token Optimized AI Coaching</p>
     </footer>
 
     <!-- Script imports -->

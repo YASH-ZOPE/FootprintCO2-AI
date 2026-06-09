@@ -27,10 +27,10 @@ if (typeof window !== 'undefined') {
 
 const StorageLayer = {
     KEYS: {
-        PROFILE: 'eco_profile',
-        HISTORY: 'eco_emissions_history',
-        PLEDGES: 'eco_active_pledges',
-        AI_CACHE: 'eco_ai_insights'
+        PROFILE:  'fpco2_profile',
+        HISTORY:  'fpco2_emissions_history',
+        PLEDGES:  'fpco2_active_pledges',
+        AI_CACHE: 'fpco2_ai_insights'
     },
 
     // Default Profile
@@ -86,7 +86,7 @@ const StorageLayer = {
         try {
             return JSON.parse(profile);
         } catch (e) {
-            Logger.error("Failed to parse eco_profile, resetting", e);
+            Logger.error("Failed to parse fpco2_profile, resetting", e);
             const fallback = { ...this.DEFAULT_PROFILE };
             this.setProfile(fallback);
             return fallback;
@@ -133,7 +133,7 @@ const StorageLayer = {
         try {
             return JSON.parse(history);
         } catch (e) {
-            Logger.error("Failed to parse eco_emissions_history, resetting", e);
+            Logger.error("Failed to parse fpco2_emissions_history, resetting", e);
             this.safeSetItem(this.KEYS.HISTORY, JSON.stringify([]));
             return [];
         }
@@ -191,7 +191,7 @@ const StorageLayer = {
         try {
             return JSON.parse(pledges);
         } catch (e) {
-            Logger.error("Failed to parse eco_active_pledges, resetting", e);
+            Logger.error("Failed to parse fpco2_active_pledges, resetting", e);
             this.safeSetItem(this.KEYS.PLEDGES, JSON.stringify([]));
             return [];
         }
@@ -239,7 +239,7 @@ const StorageLayer = {
         try {
             return JSON.parse(cache);
         } catch (e) {
-            Logger.error("Failed to parse eco_ai_insights, resetting", e);
+            Logger.error("Failed to parse fpco2_ai_insights, resetting", e);
             localStorage.removeItem(this.KEYS.AI_CACHE);
             return null;
         }

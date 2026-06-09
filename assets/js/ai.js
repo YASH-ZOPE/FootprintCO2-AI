@@ -3,6 +3,9 @@
  * Manages personalized insights, token-optimized LLM calls, and smart caching.
  */
 
+/** Single source of truth for the Gemini model identifier. */
+const GEMINI_MODEL = 'gemini-1.5-flash';
+
 const AICoach = {
     // Threshold to trigger recalculation of AI advice
     CHANGE_THRESHOLD_PERCENT: 15,
@@ -37,36 +40,36 @@ const AICoach = {
      */
     generateLocalInsight(data, goal) {
         const { categories, total, percentages } = data;
-        
+
         // Find largest contributor
         let maxCategory = 'transport';
         let maxVal = percentages.transport;
-        
         for (const [cat, val] of Object.entries(percentages)) {
-            if (val > maxVal) {
-                maxVal = val;
-                maxCategory = cat;
-            }
+            if (val > maxVal) { maxVal = val; maxCategory = cat; }
         }
 
+        // Goal progress
         const goalDiff = total - goal;
-        let goalText = '';
-        if (goalDiff <= 0) {
-            goalText = `Congratulations! You are currently meeting your target carbon goal of **${goal} tonnes/year**. Keep up this fantastic effort!`;
-        } else {
-            goalText = `You are currently **${goalDiff.toFixed(1)} tonnes** above your annual goal of **${goal} tonnes**. Bridging this gap will require targeted actions.`;
-        }
+        const goalText = goalDiff <= 0
+            ? `Congratulations! You are meeting your target of **${goal} t/yr** — you are **${Math.abs(goalDiff).toFixed(1)} t** under budget. Keep it up!`
+            : `You are **${goalDiff.toFixed(1)} t** above your annual goal of **${goal} t** (${((goalDiff / goal) * 100).toFixed(0)}% over target). The actions below can close this gap.`;
+
+        // Dynamic, data-driven advice with concrete savings numbers
+        const transportSaving = +(categories.transport * 0.20).toFixed(2); // 20% shift to transit
+        const energySaving    = +(categories.energy    * 0.15).toFixed(2); // AC +2°C + LED = ~15%
+        const foodSaving      = +(categories.food      * 0.18).toFixed(2); // 2 plant-based days/wk
+        const wasteSaving     = +(categories.waste     * 0.30).toFixed(2); // composting + recycling
 
         const categoryAdvice = {
-            transport: `Your transport footprint is your largest driver, making up **${percentages.transport}%** of your total. Reducing short car trips by walking, or choosing public transit can trim your footprint substantially.`,
-            energy: `Household electricity accounts for **${percentages.energy}%** of your footprint. Setting your AC to 24°C (BEE guideline), switching to 5-star rated appliances, and exploring rooftop solar under PM Surya Ghar Yojana can reduce this substantially.`,
-            food: `Diet choices are your primary driver at **${percentages.food}%** of your emissions. Swapping high-impact meats (like beef) for poultry or legumes, even a few days a week, will make a major dent.`,
-            waste: `Your shopping and waste habits comprise **${percentages.waste}%** of your carbon footprint. Focusing on composting organic scraps and buying second-hand items first will optimize your impact.`
+            transport: `Your transport footprint (**${percentages.transport}%** of total, ${categories.transport.toFixed(2)} t/yr) is your largest driver. Replacing **20% of car trips** with shared transit, Metro, or cycling could save approximately **${transportSaving} t CO₂/yr**. Consider carpooling for commutes over 10 km, or using BEST/DTC bus passes for daily routes.`,
+            energy:    `Household energy (**${percentages.energy}%** of total, ${categories.energy.toFixed(2)} t/yr) is your primary driver. Raising AC temperature by just 2°C (to 24°C per BEE guidelines) and switching to 5-star LED lighting could cut this by roughly **${energySaving} t CO₂/yr**. Exploring PM Surya Ghar Yojana for rooftop solar can reduce your CEA grid dependency significantly.`,
+            food:      `Your diet choices (**${percentages.food}%** of total, ${categories.food.toFixed(2)} t/yr) are your biggest lever. Adopting **2 plant-based days per week** using dals, legumes, and seasonal vegetables from your local mandi could save approximately **${foodSaving} t CO₂/yr**. Buying FSSAI-certified local and organic produce further reduces embedded transport emissions.`,
+            waste:     `Shopping and waste habits (**${percentages.waste}%** of total, ${categories.waste.toFixed(2)} t/yr) offer quick wins. Following Swachh Bharat's **wet-dry waste segregation** and composting organic kitchen scraps could reduce this by ~**${wasteSaving} t CO₂/yr**. Prioritising second-hand purchases and repairable electronics avoids embedded production emissions.`
         };
 
         const advice = categoryAdvice[maxCategory] || categoryAdvice['transport'];
-        
-        return `### AI Sustainability Coach Recommendation\n\n${goalText}\n\n**Key Area for Improvement:** ${advice}\n\n*Tip:* Check out the Pledge Center to commit to specific actions and earn Eco-Points!`;
+
+        return `### AI Sustainability Coach Recommendation\n\n${goalText}\n\n**Key Area for Improvement:** ${advice}\n\n*Tip:* Head to the Pledge Center to commit to specific actions and start earning Eco-Points!`;
     },
 
     /**
@@ -93,7 +96,7 @@ Rules:
 3. Recommend 2 highly specific, realistic daily actions to reduce that contributor.
 4. Keep the response to 3-4 sentences total (under 120 words). Do not output general introductory fluff or standard copy-paste tips. Format using markdown.`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
         try {
             const response = await fetch(url, {
