@@ -3,6 +3,8 @@
  * Manages personalized insights, token-optimized LLM calls, and smart caching.
  */
 
+"use strict";
+
 /** Single source of truth for the Gemini model identifier. */
 const GEMINI_MODEL = 'gemini-2.5-flash';
 

@@ -4,9 +4,11 @@
  * Output values are in metric tonnes of CO2 equivalent per year (tCO2e/yr).
  */
 
+"use strict";
+
 const CalcEngine = {
     // Constant emission factors (derived from Indian CEA, standard automotive testing, and IPCC guidelines)
-    FACTORS: {
+    FACTORS: Object.freeze({
         // Transport (per passenger km)
         GAS_CAR_PER_KM: 0.00020,         // 0.20 kg CO2e per km (average Indian petrol/diesel hatchback/sedan)
         EV_CAR_PER_KM: 0.00012,          // 0.12 kg CO2e per km (based on Indian grid mix carbon intensity)
@@ -18,29 +20,29 @@ const CalcEngine = {
         LPG_PER_CYLINDER: 0.0425,        // 42.5 kg CO2e per standard 14.2 kg domestic LPG cylinder
 
         // Food base annual emissions (tonnes CO2e/year)
-        DIETS: {
+        DIETS: Object.freeze({
             'meat-heavy': 2.8,
             'average': 2.0,
             'vegetarian': 1.4,
             'vegan': 1.0
-        },
+        }),
 
         // Waste base annual emissions (tonnes CO2e/year)
-        SHOPPING: {
+        SHOPPING: Object.freeze({
             'high': 2.5,
             'medium': 1.2,
             'low': 0.4
-        }
-    },
+        })
+    }),
 
     // Standard scalar factors to prevent magic numbers in calculate()
-    CONSTANTS: {
+    CONSTANTS: Object.freeze({
         WEEKS_PER_YEAR: 52,
         MONTHS_PER_YEAR: 12,
         LOCAL_FOOD_REDUCTION_FACTOR: 0.90,
         MAX_RECYCLING_REDUCTION_TONNES: 0.4,
         MIN_WASTE_FOOTPRINT_TONNES: 0.1
-    },
+    }),
 
     /**
      * Calculates emissions across all categories.

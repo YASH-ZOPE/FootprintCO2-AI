@@ -3,6 +3,8 @@
  * Runs natively in Node.js using assert.
  */
 
+"use strict";
+
 const assert = require('assert');
 
 // ----------------------------------------------------
@@ -42,6 +44,8 @@ console.log("   RUNNING FOOTPRINTCO2 AI ENGINE TESTS  ");
 console.log("==========================================\n");
 
 let passedTestsCount = 0;
+let failedTests = [];
+
 function runTest(testName, testFn) {
     try {
         testFn();
@@ -49,8 +53,8 @@ function runTest(testName, testFn) {
         passedTestsCount++;
     } catch (error) {
         console.error(`❌ Failed: ${testName}`);
-        console.error(error);
-        process.exit(1);
+        console.error(`   ${error.message || error}`);
+        failedTests.push({ name: testName, error });
     }
 }
 
@@ -347,6 +351,184 @@ runTest("CalcEngine safely handles NaN, undefined, negative values, and Infinity
     assert.ok(results.categories.energy >= 0, "Energy emissions should be valid and clamp inputs to safe limits");
 });
 
+// -------------------------------------------------------
+// New Test 15: Eco Tier Point Brackets Boundaries
+// -------------------------------------------------------
+runTest("StorageLayer.calculateTier maps point boundaries to correct Eco Tiers", () => {
+    assert.strictEqual(StorageLayer.calculateTier(0), 'Eco-Novice');
+    assert.strictEqual(StorageLayer.calculateTier(199), 'Eco-Novice');
+    assert.strictEqual(StorageLayer.calculateTier(200), 'Eco-Defender');
+    assert.strictEqual(StorageLayer.calculateTier(499), 'Eco-Defender');
+    assert.strictEqual(StorageLayer.calculateTier(500), 'Eco-Champion');
+    assert.strictEqual(StorageLayer.calculateTier(999), 'Eco-Champion');
+    assert.strictEqual(StorageLayer.calculateTier(1000), 'Eco-Guardian');
+    assert.strictEqual(StorageLayer.calculateTier(5000), 'Eco-Guardian');
+});
+
+// -------------------------------------------------------
+// New Test 16: Profile Updates and Tier Transitions
+// -------------------------------------------------------
+runTest("StorageLayer.updateProfile updates points and correctly transitions tiers", () => {
+    resetLocalStorage();
+    const p1 = StorageLayer.getProfile();
+    assert.strictEqual(p1.ecoTier, 'Eco-Novice');
+
+    // Update points to trigger Defender tier
+    StorageLayer.updateProfile({ ecoPoints: 300 });
+    const p2 = StorageLayer.getProfile();
+    assert.strictEqual(p2.ecoPoints, 300);
+    assert.strictEqual(p2.ecoTier, 'Eco-Defender');
+
+    // Update points to trigger Guardian tier
+    StorageLayer.updateProfile({ ecoPoints: 1200 });
+    const p3 = StorageLayer.getProfile();
+    assert.strictEqual(p3.ecoTier, 'Eco-Guardian');
+});
+
+// -------------------------------------------------------
+// New Test 17: CalcEngine Household Size Clamping Boundaries
+// -------------------------------------------------------
+runTest("CalcEngine clamps household sizes and divisions work properly", () => {
+    const baselineInputs = {
+        carKm: 0, evKm: 0, transitKm: 0, flightHours: 0,
+        electricityKwh: 100, solarPercent: 0, lpgCylinders: 0, // energyBase = 100 * 12 * 0.00082 = 0.984 t
+        dietType: 'vegan', localFood: true, shoppingHabit: 'low', recyclePercent: 100
+    };
+
+    // Case A: Size 0 (clamps to minimum 1)
+    const res0 = CalcEngine.calculate({ ...baselineInputs, householdSize: 0 });
+    assert.strictEqual(res0.inputs.householdSize, 1);
+    assert.strictEqual(res0.categories.energy, 0.98);
+
+    // Case B: Size 2 (divides energy by 2)
+    const res2 = CalcEngine.calculate({ ...baselineInputs, householdSize: 2 });
+    assert.strictEqual(res2.inputs.householdSize, 2);
+    // 0.984 / 2 = 0.492 -> 0.49
+    assert.strictEqual(res2.categories.energy, 0.49);
+
+    // Case C: Extreme size 150 (clamps to maximum 100)
+    const res150 = CalcEngine.calculate({ ...baselineInputs, householdSize: 150 });
+    assert.strictEqual(res150.inputs.householdSize, 100);
+    // 0.984 / 100 = 0.00984 -> 0.01
+    assert.strictEqual(res150.categories.energy, 0.01);
+});
+
+// -------------------------------------------------------
+// New Test 18: DecisionEngine Equal Percentage Prioritization
+// -------------------------------------------------------
+runTest("DecisionEngine prioritization yields consistent ranking when categories have equal contributions", () => {
+    // Categories have exact equal contributions of 25% each
+    const equalPercentages = { transport: 25.0, energy: 25.0, food: 25.0, waste: 25.0 };
+    const order = DecisionEngine.getPrioritizedCategories(equalPercentages);
+    
+    // Total order must contain all 4 categories and resolve without omissions
+    assert.strictEqual(order.length, 4);
+    assert.ok(order.includes('transport'));
+    assert.ok(order.includes('energy'));
+    assert.ok(order.includes('food'));
+    assert.ok(order.includes('waste'));
+});
+
+// -------------------------------------------------------
+// New Test 19: StorageLayer Emissions Logging Date Update Clashing
+// -------------------------------------------------------
+runTest("StorageLayer.saveEmissionsEntry replaces today's existing log instead of appending a new entry", () => {
+    resetLocalStorage();
+    const mockEntry1 = { total: 4.5, categories: { transport: 1.0, energy: 1.0, food: 1.0, waste: 1.5 }, percentages: {}, inputs: {} };
+    const mockEntry2 = { total: 5.2, categories: { transport: 1.5, energy: 1.0, food: 1.0, waste: 1.7 }, percentages: {}, inputs: {} };
+
+    StorageLayer.saveEmissionsEntry(mockEntry1);
+    const h1 = StorageLayer.getHistory();
+    assert.strictEqual(h1.length, 1);
+    assert.strictEqual(h1[0].total, 4.5);
+
+    // Saving another entry on the same calendar day updates/replaces today's entry
+    StorageLayer.saveEmissionsEntry(mockEntry2);
+    const h2 = StorageLayer.getHistory();
+    assert.strictEqual(h2.length, 1);
+    assert.strictEqual(h2[0].total, 5.2);
+});
+
+// -------------------------------------------------------
+// New Test 20: E2E Integration Flow (Lifecycle simulation)
+// -------------------------------------------------------
+runTest("E2E Lifecycle Integration: Onboarding -> Emissions -> Prioritisation -> Pledging -> Tier Change", () => {
+    resetLocalStorage();
+
+    // 1. Onboarding Phase
+    const initialInputs = {
+        carKm: 150, evKm: 0, transitKm: 50, flightHours: 5,
+        electricityKwh: 200, solarPercent: 0, lpgCylinders: 1, householdSize: 2,
+        dietType: 'average', localFood: false, shoppingHabit: 'medium', recyclePercent: 50
+    };
+    
+    // Process calculation
+    const initialResults = CalcEngine.calculate(initialInputs);
+    assert.strictEqual(initialResults.categories.transport, 2.11);
+    
+    // Save user profile details mimicking onboarding submit
+    StorageLayer.updateProfile({
+        name: "Test User",
+        carbonGoal: 2.0,
+        ecoPoints: 50
+    });
+    
+    // Confirm profile creation
+    const profile = StorageLayer.getProfile();
+    assert.strictEqual(profile.name, "Test User");
+    assert.strictEqual(profile.ecoPoints, 50);
+    assert.strictEqual(profile.ecoTier, "Eco-Novice");
+
+    // Save initial logs
+    StorageLayer.saveEmissionsEntry(initialResults);
+    const history = StorageLayer.getHistory();
+    assert.strictEqual(history.length, 1);
+    assert.strictEqual(history[0].total, initialResults.total);
+
+    // 2. Decision Phase (Check priorities)
+    const prioritized = DecisionEngine.getPrioritizedCategories(initialResults.percentages);
+    // Food is prioritized first because it exceeds the 30% threshold (34.8% > 30%)
+    assert.strictEqual(prioritized[0], 'food');
+
+    // 3. Recommendation Phase (Commit to action)
+    const recs = RecommendationEngine.getRecommendations(prioritized, []);
+    assert.strictEqual(recs.length, 3);
+    const targetPledge = recs.find(r => r.category === 'food');
+    assert.ok(targetPledge, "Should have a food pledge available");
+
+    // Commit to the pledge
+    StorageLayer.togglePledge(targetPledge.id, 'active');
+    const pledges = StorageLayer.getPledges();
+    const activePledge = pledges.find(p => p.pledgeId === targetPledge.id);
+    assert.ok(activePledge);
+    assert.strictEqual(activePledge.status, 'active');
+
+    // 4. Achievement Tier Phase
+    // Complete pledge, reward user points and verify tier change
+    StorageLayer.togglePledge(targetPledge.id, 'completed');
+    StorageLayer.updateProfile({
+        ecoPoints: profile.ecoPoints + targetPledge.points
+    });
+
+    const updatedProfile = StorageLayer.getProfile();
+    assert.strictEqual(updatedProfile.ecoPoints, 50 + targetPledge.points);
+    
+    // Add multiple points to transition tier to Champion
+    StorageLayer.updateProfile({
+        ecoPoints: updatedProfile.ecoPoints + 500
+    });
+    const finalProfile = StorageLayer.getProfile();
+    assert.ok(finalProfile.ecoPoints >= 600);
+    assert.strictEqual(finalProfile.ecoTier, 'Eco-Champion'); // >= 500 points
+});
+
 console.log("\n==========================================");
-console.log(`🎉 ALL ${passedTestsCount} TESTS COMPLETED SUCCESSFULLY!`);
-console.log("==========================================\n");
+if (failedTests.length > 0) {
+    console.error(`💥 ${failedTests.length} TEST(S) FAILED:`);
+    failedTests.forEach(f => console.error(`   • ${f.name}`));
+    console.log("==========================================\n");
+    process.exit(1);
+} else {
+    console.log(`🎉 ALL ${passedTestsCount} TESTS COMPLETED SUCCESSFULLY!`);
+    console.log("==========================================\n");
+}

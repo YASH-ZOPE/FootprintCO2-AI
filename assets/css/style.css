@@ -1301,3 +1301,56 @@ a:hover {
 .sandbox-section-title.waste-title {
     color: hsl(270, 80%, 75%);
 }
+
+/* Toast Notification — styled via CSS class (no inline styles) */
+.app-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    z-index: 9999;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+}
+.app-toast--visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Cache Badge State Classes — toggled via JS classList (no inline style.color) */
+.badge-uncached { color: var(--warning); }
+.badge-outdated { color: var(--danger); }
+.badge-cached   { color: var(--primary-light); }
+.badge-syncing  { color: var(--warning); }
+.badge-local    { color: var(--text-muted); }
+.badge-gemini   { color: var(--accent); }
+.badge-error    { color: var(--danger); }
+
+/* Accessibility Focus States — outline triggers on keyboard tab focus-visible */
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(0, 242, 254, 0.15);
+}
+
+/* User Motion Preferences — disables visual transitions/animations when requested */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+

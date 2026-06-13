@@ -4,6 +4,8 @@
  * and ranks them based on Decision Engine priorities.
  */
 
+"use strict";
+
 const RecommendationEngine = {
     // Constant parameters to prevent magic numbers
     MAX_RECOMMENDATIONS: 3,
@@ -172,20 +174,24 @@ const RecommendationEngine = {
      * @returns {Array<Object>} List of top 3 recommended actions
      */
     getRecommendations(prioritizedCategories, excludedPledgeIds = []) {
-        // 1. Filter out already pledged or active actions
-        const available = this.DB.filter(rec => !excludedPledgeIds.includes(rec.id));
+        // 1. Filter out already pledged or active actions using a Set for O(1) checks
+        const excludedSet = new Set(excludedPledgeIds);
+        const available = this.DB.filter(rec => !excludedSet.has(rec.id));
         
+        // Pre-compute category ranks to avoid O(n) indexOf calls inside sorting comparator
+        const categoryRank = new Map(prioritizedCategories.map((cat, idx) => [cat, idx]));
+
         // 2. Score and sort available actions
         // Sort order rules:
         // - Priority based on index in prioritizedCategories (lower index = higher priority)
         // - Secondary based on co2Reduction (highest reduction = higher priority)
         available.sort((a, b) => {
-            const indexA = prioritizedCategories.indexOf(a.category);
-            const indexB = prioritizedCategories.indexOf(b.category);
+            const rankA = categoryRank.has(a.category) ? categoryRank.get(a.category) : Infinity;
+            const rankB = categoryRank.has(b.category) ? categoryRank.get(b.category) : Infinity;
             
             // If they are in different categories, sort by category priority
-            if (indexA !== indexB) {
-                return indexA - indexB;
+            if (rankA !== rankB) {
+                return rankA - rankB;
             }
             
             // If in same category, sort by co2 reduction descending
@@ -196,6 +202,10 @@ const RecommendationEngine = {
         return available.slice(0, this.MAX_RECOMMENDATIONS);
     }
 };
+
+// Freeze immutable database configuration
+RecommendationEngine.DB.forEach(Object.freeze);
+Object.freeze(RecommendationEngine.DB);
 
 // Expose on window or export
 if (typeof module !== 'undefined' && module.exports) {

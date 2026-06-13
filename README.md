@@ -28,14 +28,15 @@ FootprintCO2 AI is a modern, client-side web application that helps individuals 
 6. [System Architecture](#system-architecture)
 7. [Decision Engine](#decision-engine)
 8. [Token Optimization Strategy](#token-optimization-strategy)
-9. [Technology Stack](#technology-stack)
-10. [Security & Privacy](#security--privacy)
-11. [Accessibility](#accessibility)
-12. [Testing](#testing)
-13. [Screenshots](#screenshots)
-14. [Live Demo](#live-demo)
-15. [Assumptions](#assumptions)
-16. [Future Enhancements](#future-enhancements)
+9. [Performance Optimizations](#performance-optimizations)
+10. [Technology Stack](#technology-stack)
+11. [Security & Privacy](#security--privacy)
+12. [Accessibility](#accessibility)
+13. [Testing](#testing)
+14. [Screenshots](#screenshots)
+15. [Live Demo](#live-demo)
+16. [Assumptions](#assumptions)
+17. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -156,7 +157,12 @@ The platform separates responsibilities into independent, single-responsibility 
 | Recommendation Engine | `assets/js/recommendation.js` | Action database and ranking |
 | AI Coach | `assets/js/ai.js` | LLM integration and caching |
 | Storage Layer | `assets/js/storage.js` | LocalStorage persistence |
-| App Controller | `assets/js/app.js` | UI bindings and state management |
+| UI & Modals | `assets/js/ui.js` | DOM caching and accessibility modals |
+| Dashboard Renderer | `assets/js/dashboard.js` | Main layout and pledges renderer |
+| History Charts | `assets/js/charts.js` | Chart updates via DocumentFragment |
+| Onboarding Wizard | `assets/js/onboarding.js` | Setup and wizard transitions |
+| Event Handlers | `assets/js/eventHandlers.js` | Debounced input synchronization |
+| App Controller | `assets/js/app.js` | Orchestrator and core state manager |
 
 ---
 
@@ -204,6 +210,19 @@ FootprintCO2 AI is designed with **efficiency and cost optimization as core prin
 | **Offline fallback** | Template-based local advice serves immediately if API is unavailable |
 
 **Result:** The average user triggers zero AI calls during normal calculator interactions. AI is invoked only for deep personalization on explicit request.
+
+---
+
+## Performance Optimizations
+
+To deliver a premium experience with zero input latency, the codebase implements advanced performance patterns:
+
+- **O(1) pledge exclusion lookup via Set**: Speeds up filtering of available pledges from the database.
+- **Cached recommendation generation**: Skips sorting and rendering when category priority and pledged hashes are identical.
+- **Single-pass category aggregation**: Uses a single `for...of` traversal instead of chainable `.filter().map()` array operations.
+- **DOM node caching**: Registry stores references to interactive elements, preventing costly repetitive DOM queries.
+- **DocumentFragment batching**: Batches historical chart updates to reduce browser reflows and paints.
+- **Debounced calculation pipeline**: Debounces recalculation events by 50ms to keep interface sliders fluid and responsive.
 
 ---
 
@@ -383,7 +402,12 @@ FootprintCO2-AI/
 │       ├── recommendation.js   # Recommendation Engine (India-specific actions)
 │       ├── ai.js               # AI Sustainability Coach (Gemini + caching)
 │       ├── storage.js          # LocalStorage persistence layer
-│       └── app.js              # Main application controller
+│       ├── ui.js               # DOM caching registry & accessibility helper
+│       ├── dashboard.js        # Dashboard UI and pledge card compilation
+│       ├── charts.js           # DocumentFragment history chart renderer
+│       ├── onboarding.js       # Onboarding multi-step wizard controller
+│       ├── eventHandlers.js    # Event bindings & debounced input sync
+│       └── app.js              # Main orchestrator & application state
 ├── test.js                     # Automated unit test suite
 └── README.md                   # This file
 ```

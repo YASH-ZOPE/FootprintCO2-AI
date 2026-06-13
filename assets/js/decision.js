@@ -4,14 +4,16 @@
  * and prioritize categories requiring intervention.
  */
 
+"use strict";
+
 const DecisionEngine = {
     // Priority thresholds (percentages of total footprint)
-    THRESHOLDS: {
+    THRESHOLDS: Object.freeze({
         TRANSPORT: 40,
         ENERGY: 35,
         FOOD: 30,
         WASTE: 25
-    },
+    }),
 
     /**
      * Determines priority of emission categories based on thresholds
@@ -21,30 +23,26 @@ const DecisionEngine = {
      */
     getPrioritizedCategories(percentages) {
         const flagged = [];
-        
-        // 1. Evaluate rules independently
-        if (percentages.transport > this.THRESHOLDS.TRANSPORT) {
-            flagged.push({ name: 'transport', percent: percentages.transport, threshold: this.THRESHOLDS.TRANSPORT });
-        }
-        if (percentages.energy > this.THRESHOLDS.ENERGY) {
-            flagged.push({ name: 'energy', percent: percentages.energy, threshold: this.THRESHOLDS.ENERGY });
-        }
-        if (percentages.food > this.THRESHOLDS.FOOD) {
-            flagged.push({ name: 'food', percent: percentages.food, threshold: this.THRESHOLDS.FOOD });
-        }
-        if (percentages.waste > this.THRESHOLDS.WASTE) {
-            flagged.push({ name: 'waste', percent: percentages.waste, threshold: this.THRESHOLDS.WASTE });
+
+        // Data-driven evaluation: iterate threshold rules so adding a new category
+        // to THRESHOLDS automatically includes it — no manual if-block duplication.
+        for (const [key, threshold] of Object.entries(this.THRESHOLDS)) {
+            const categoryName = key.toLowerCase();
+            const percent = percentages[categoryName] || 0;
+            if (percent > threshold) {
+                flagged.push({ name: categoryName, percent, threshold });
+            }
         }
 
-        // 2. Sort flagged categories by their percentage contribution descending
+        // Sort flagged categories by their percentage contribution descending
         // so the actual largest driver gets top priority.
         flagged.sort((a, b) => b.percent - a.percent);
-        
+
         const prioritized = flagged.map(f => f.name);
-        
-        // 3. Append non-flagged categories at the end, sorted by percentage contribution,
+
+        // Append non-flagged categories at the end, sorted by percentage contribution,
         // ensuring all categories are represented in order of footprint size.
-        const allCategories = ['transport', 'energy', 'food', 'waste'];
+        const allCategories = Object.keys(this.THRESHOLDS).map(k => k.toLowerCase());
         const remaining = allCategories
             .filter(cat => !prioritized.includes(cat))
             .map(cat => ({ name: cat, percent: percentages[cat] || 0 }))
