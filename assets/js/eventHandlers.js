@@ -124,7 +124,7 @@ window.App = window.App || {};
             const latest = StorageLayer.getLatestEmissions();
             if (!latest) return;
 
-            if (!App.State.geminiApiKey) {
+            if (!App.hasApiKey()) {
                 UI.ModalManager.open(DOM.apiKeyModal);
                 DOM.geminiApiKeyInput.value = '';
             } else {
@@ -134,7 +134,7 @@ window.App = window.App || {};
 
         DOM.btnApiKeyConfig.addEventListener('click', () => {
             UI.ModalManager.open(DOM.apiKeyModal);
-            DOM.geminiApiKeyInput.value = App.State.geminiApiKey;
+            DOM.geminiApiKeyInput.value = App.getApiKey();
         });
 
         DOM.btnApiKeyCancel.addEventListener('click', () => {
@@ -142,7 +142,7 @@ window.App = window.App || {};
         });
 
         DOM.btnApiKeySave.addEventListener('click', () => {
-            App.State.geminiApiKey = DOM.geminiApiKeyInput.value.trim();
+            App.setApiKey(DOM.geminiApiKeyInput.value.trim());
             UI.ModalManager.close(DOM.apiKeyModal);
 
             const latest = StorageLayer.getLatestEmissions();
@@ -154,7 +154,7 @@ window.App = window.App || {};
         DOM.btnClearHistory.addEventListener('click', () => {
             if (DOM.btnClearHistory.dataset.confirmPending === 'true') {
                 StorageLayer.clearAll();
-                App.State.geminiApiKey = '';
+                App.setApiKey('');
                 window.location.reload();
             } else {
                 DOM.btnClearHistory.dataset.confirmPending = 'true';

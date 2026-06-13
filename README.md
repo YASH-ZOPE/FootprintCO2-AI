@@ -276,11 +276,13 @@ node test.js
 |---|---|
 | **Formula Validation** | Standard car km calculations (e.g., `150 km/week × 52 × 0.00020 = 1.56 tCO₂e/yr`) |
 | **Boundary/Edge Cases** | Zero inputs, maximum values, single-person households |
-| **Decision Engine Rules** | Transport at 45% → transport ranked first; Food at 60% → food ranked first |
+| **Decision Engine Rules** | Transport at 45% → transport ranked first; Food at 60% → food ranked first; equal contribution prioritisation |
 | **Recommendation Filtering** | Active pledges excluded from results; exactly 3 recommendations returned |
 | **AI Cache Threshold** | 10% change → cache hit (no refresh); 20% change → cache miss (refresh triggered) |
 | **Production Formatter Test** | Verifies XSS safety, Markdown heading styling, and italic/bold parsing natively on `AICoach` |
 | **Adversarial & NaN Clamping** | Verifies CalcEngine clamps negative, NaN, undefined, and `Infinity` values safely to protect math |
+| **Storage & Tier Transitions** | Verifies recovery from corruption, quota limit safety, points brackets mapping, and history caps |
+| **E2E Lifecycle flow** | Verifies onboarding -> emissions calculation -> rules prioritize -> pledge commits -> tier transitions |
 
 ### Test Results
 
@@ -300,49 +302,60 @@ node test.js
 [FootprintCO2 AI Warning]: LocalStorage quota exceeded! Attempting to free space
 ✅ Passed: StorageLayer handles QuotaExceededExceptions by dropping AI cache
 ✅ Passed: Engine configurations and threshold constants are correctly structured
-✅ Passed: formatAdviceMarkdown neutralizes XSS payloads and preserves valid markdown
+✅ Passed: formatAdviceMarkdown XSS Safety
 ✅ Passed: StorageLayer enforces MAX_HISTORY_ENTRIES cap
 ✅ Passed: StorageLayer togglePledge correctly sets pledge status to active
 ✅ Passed: AICoach.generateLocalInsight gives Indian-context data-driven output for all 4 categories
 ✅ Passed: CalcEngine safely handles NaN, undefined, negative values, and Infinity values without crashing
+✅ Passed: StorageLayer.calculateTier maps point boundaries to correct Eco Tiers
+✅ Passed: StorageLayer.updateProfile updates points and correctly transitions tiers
+✅ Passed: CalcEngine clamps household sizes and divisions work properly
+✅ Passed: DecisionEngine prioritization yields consistent ranking when categories have equal contributions
+✅ Passed: StorageLayer.saveEmissionsEntry replaces today's existing log instead of appending a new entry
+✅ Passed: E2E Lifecycle Integration: Onboarding -> Emissions -> Prioritisation -> Pledging -> Tier Change
 
 ==========================================
-🎉 ALL 14 TESTS COMPLETED SUCCESSFULLY!
+🎉 ALL 20 TESTS COMPLETED SUCCESSFULLY!
 ==========================================
 ```
 
 ---
 
-## Engineering Excellence & Evaluation Alignment (99.97% Target)
+## Engineering Excellence & Self-Evaluation Targets
 
-FootprintCO2 AI has been structurally optimized to meet the most rigorous code quality, security, efficiency, testing, and accessibility standards.
+FootprintCO2 AI has been structurally optimized to improve code quality, security, efficiency, testing, and accessibility.
 
 ### 1. Code Quality (Structure, Readability, & Maintainability)
-* **Clean MVC Architecture**: Business logic is separated into independent single-responsibility engines ([calc.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/calc.js), [decision.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/decision.js), [recommendation.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/recommendation.js)) with strict public interfaces, decoupled from UI rendering.
-* **AppState as the Single Source of Truth**: Centered runtime state inside a single JavaScript object (`AppState`), ensuring that the DOM is strictly used for presentation rather than state storage.
-* **Separation of Styling (0 Inline Styles)**: Wiped out all inline HTML `style="..."` attributes and migrated them to descriptive classes in [style.css](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/css/style.css), ensuring clean code separation.
-* **Unified Input Parser**: Added `readFormInputs` utility function to resolve logic duplication, merging duplicate form-reading functions from onboarding and sandbox elements.
-* **Elimination of Magic Numbers**: Extracted all numerical conversions, thresholds, points brackets, and count limits into declarative constants (`CalcEngine.CONSTANTS`, `DecisionEngine.THRESHOLDS`, `StorageLayer.TIER_LIMITS`).
+* **Clean MVC Architecture**: Business logic is separated into independent single-responsibility engines ([calc.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/calc.js), [decision.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/decision.js), [recommendation.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/recommendation.js)) decoupled from UI rendering.
+* **AppState as the Single Source of Truth**: Centered runtime state inside a single JavaScript object (`AppState`) inside [app.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/app.js).
+* **Controlled Access Patterns**: Global namespace risks on `window.App` are reduced via encapsulation, though script loading remains dependent on tag order inside `index.html`.
+* **JSDoc typing**: Completed JSDoc documentation across all modules to ensure code maintainability.
+* **Global Strict Mode**: Enabled `"use strict";` at the top of all JavaScript codebase files.
 
 ### 2. Security (Safe & Responsible Implementation)
-* **Pure In-Memory API Key Lifecycle**: Gemini key storage uses strict in-memory state. Keys are never saved to local storage or session storage, ensuring credentials automatically vanish on tab close.
-* **Defense-in-Depth Validation**: Inputs are mathematically clamped (e.g. `solarPercent` and `recyclePercent` clamped strictly to `[0, 100]`, and household size to `>= 1`) in `calc.js` to ensure variables remain safe and finite.
-* **Parse Recovery**: JSON storage inputs are protected with catch blocks; if data corruption is detected, the key is immediately re-initialized with clean default models.
+* **Reduced API Key Exposure**: Stored user Gemini API Keys inside a private lexical scope closure in `app.js`. It is accessible only via closed accessor helpers (`App.getApiKey`, `App.setApiKey`), and is never committed to `localStorage` or `sessionStorage` (preventing offline key theft). Note: Key can still be requested via browser console command `window.App.getApiKey()`, meaning exposure risk is reduced but not eliminated.
+* **XSS Defense**: Raw AI coach output from LLM is sanitized via `escapeHtml()` *before* being processed into formatting tags.
+* **CSP Alignment**: Refactored all inline elements styling attributes out of JS bindings into static CSS classes in [style.css](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/css/style.css).
 
 ### 3. Efficiency (Optimal Resource Usage - Time & Memory)
-* **Debounced Event Handling**: Displays update immediately on slider drag, but calculations and storage writes are debounced by 50ms to keep user interactions fluid.
-* **DOM Paint/Reflow Guards**: Integrated equality guards (`textContent !== newValue`) on all hot visual nodes, preventing unnecessary browser paint cycles during rapid slider moves.
-* **In-Memory History Synchronization**: Cache lists (`AppState.history`) update directly in JS runtime on slider changes, removing redundant localStorage reads on dashboard updates.
-* **Form Event Delegation**: Consolidated range slider event listeners using delegated event handlers on `#onboardingForm` and `#calculatorForm`, trimming listeners down from 18 to 2.
+* **O(1) Exclusions**: Available recommendation filters convert arrays to a `Set` for O(1) checks.
+* **DateTimeFormat Cache**: Reuses a single `Intl.DateTimeFormat` instance in [charts.js](file:///c:/Users/HP/OneDrive/Desktop/challenege3/assets/js/charts.js) to prevent garbage collection heap overhead inside the render loop.
+* **Input Debouncing**: Dragging sandbox range elements is debounced by 50ms to keep user interactions fluid.
+* **DOM Paint Guards**: History charts are built inside an in-memory `DocumentFragment` before updating the active DOM tree.
+* **Recommendation Cache key**: Toggles dashboard card rerendering only when rounded percentages, priorities order, or pledge hashes change.
+* **LocalStorage Limitations**: Persistence relies on synchronous local storage. Capped at 10 history entries to avoid thread blocking, though a production database would require IndexedDB.
 
 ### 4. Testing (Validation & Maintainability)
-* **LocalStorage Mock Integration**: Built a Node.js mock local storage system inside `test.js` to run 100% automated test coverage against the storage layer.
-* **Adversarial & NaN Clamping Coverage**: Testing validates formula integrity when faced with `NaN`, negative numbers, `undefined`, and `Infinity`.
+* **LocalStorage Mock Integration**: Automated tests execute in Node.js using an in-memory storage mock.
+* **Logic Boundary validation**: 20 tests validate boundary cases, JSON corruption recoverability, and E2E lifecycles.
+* **Limitations**: Tests cover logic and storage layers; visual UI views and event binding submodules lack automated coverage (requiring JSDOM or Playwright in production). Line/branch coverage coverage reports are not generated.
 
 ### 5. Accessibility (Inclusive & Usable Design)
-* **Semantic Focus Loop (Focus Trap)**: `ModalManager` intercepts keyboard focus loops (`Tab`/`Shift+Tab`) inside onboarding and config screens, and returns focus to the triggering element on dialog close.
-* **Skip-To-Content Bypass**: Added `.skip-link` support enabling screen readers and keyboard users to skip top header elements.
-* **ARIA Dialog Standards**: Implemented modal attributes (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`, `aria-describedby`) and silenced onboarding dots indicators using `aria-hidden="true"`.
+* **Keyboard Focusable Charts**: Column bar elements are mapped to sequential tab index targets (`tabindex="0"`) and visual `:focus-visible` CSS borders, allowing screen readers and keyboard users to focus and read logs.
+* **Focus Trap Modals**: Onboarding walkthrough modal traps focus loops (`Tab`/`Shift+Tab`) cleanly and restores focus to parent elements upon exit.
+* **ARIA Standards**: Visual statuses use Visually Hidden descriptions (`.sr-only`), sliders declare `aria-describedby` metrics, and category rows declare progress bar roles and values dynamically.
+* **Verification**: Accessibility compliance represents projected self-assessed WCAG 2.1 AA targets (unverified by Lighthouse or WAVE scans).
+* **Reduced Motion**: Disables visual animations instantly if requested via OS settings.
 
 ---
 
@@ -356,6 +369,9 @@ FootprintCO2 AI has been structurally optimized to meet the most rigorous code q
 
 ### Interactive Carbon Calculator & History
 ![Slider-based calculator with transport, energy, food, and waste inputs](screenshots/sandbox.png)
+
+### Progress History Chart
+![Progress History Chart showing carbon levels over time](screenshots/progress_history.png)
 
 ---
 

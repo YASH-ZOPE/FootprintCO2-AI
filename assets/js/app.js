@@ -8,13 +8,17 @@
 window.App = window.App || {};
 
 document.addEventListener('DOMContentLoaded', () => {
+    let _geminiApiKey = '';
+    App.getApiKey = () => _geminiApiKey;
+    App.setApiKey = (key) => { _geminiApiKey = key; };
+    App.hasApiKey = () => !!_geminiApiKey;
+
     // Initialize AppState (Single Source of Truth)
     App.State = {
         profile: null,
         latestEmissions: null,
         history: [],
         pledges: [],
-        geminiApiKey: '',   // In-memory ONLY
         currentStep: 1,
         isCalculating: false,
 
@@ -71,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const localAdvice = AICoach.generateLocalInsight(latest, profile.carbonGoal);
 
-        if (!App.State.geminiApiKey) {
+        if (!App.hasApiKey()) {
             StorageLayer.setAICache(localAdvice, currentTotal);
             App.DOM.coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(localAdvice);
             App.UI.setBadgeState('Local Sync', 'badge-local');
@@ -98,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const aiAdvice = await AICoach.getRemoteAdvice(App.State.geminiApiKey, latest, profile.carbonGoal);
+            const aiAdvice = await AICoach.getRemoteAdvice(App.getApiKey(), latest, profile.carbonGoal);
             StorageLayer.setAICache(aiAdvice, currentTotal);
             App.DOM.coachAdviceBox.innerHTML = AICoach.formatAdviceMarkdown(aiAdvice);
             App.UI.setBadgeState('Gemini Sync', 'badge-gemini');

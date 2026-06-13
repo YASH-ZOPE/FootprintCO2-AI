@@ -57,16 +57,19 @@ window.App = window.App || {};
         // Create document fragment for optimal DOM performance
         const fragment = document.createDocumentFragment();
 
+        const dateFormatter = new Intl.DateTimeFormat('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'UTC'
+        });
+
         for (const h of history) {
             const barWrapper = document.createElement('div');
             barWrapper.className = 'chart-bar-wrapper';
+            barWrapper.setAttribute('tabindex', '0');
 
             const dateObj = new Date(h.date);
-            const shortDate = dateObj.toLocaleDateString('en-IN', {
-                month: 'short',
-                day: 'numeric',
-                timeZone: 'UTC'
-            });
+            const shortDate = dateFormatter.format(dateObj);
 
             const percentHeight = Math.max(
                 CHART_MIN_HEIGHT_PERCENT,
