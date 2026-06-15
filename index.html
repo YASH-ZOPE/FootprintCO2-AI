@@ -491,7 +491,7 @@
 
     <!-- API Key Configuration Modal -->
     <div class="modal-overlay" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyTitle" aria-describedby="apiKeyDesc">
-        <div class="glass-card api-modal-card">
+        <form class="glass-card api-modal-card" id="apiKeyForm">
             <h2 id="apiKeyTitle">Configure Gemini API Key</h2>
             <p id="apiKeyDesc" class="api-modal-desc">
                 Providing a Gemini API key enables deep AI insights directly inside the coach dashboard.
@@ -505,9 +505,9 @@
             </div>
             <div class="step-nav api-modal-nav">
                 <button class="btn btn-secondary" type="button" id="btnApiKeyCancel">Cancel</button>
-                <button class="btn btn-primary" type="button" id="btnApiKeySave">Save Key</button>
+                <button class="btn btn-primary" type="submit" id="btnApiKeySave">Save Key</button>
             </div>
-        </div>
+        </form>
     </div>
 
     <footer class="footer-container">

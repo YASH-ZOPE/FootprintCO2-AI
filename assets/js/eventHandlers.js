@@ -151,14 +151,12 @@ window.App = window.App || {};
             }
         };
 
-        DOM.btnApiKeySave.addEventListener('click', saveApiKeyAction);
-
-        DOM.geminiApiKeyInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+        if (DOM.apiKeyForm) {
+            DOM.apiKeyForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 saveApiKeyAction();
-            }
-        });
+            });
+        }
 
         DOM.btnClearHistory.addEventListener('click', () => {
             if (DOM.btnClearHistory.dataset.confirmPending === 'true') {

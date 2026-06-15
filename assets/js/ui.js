@@ -19,6 +19,7 @@ window.App = window.App || {};
         onboardGoal: document.getElementById('onboardGoal'),
 
         apiKeyModal: document.getElementById('apiKeyModal'),
+        apiKeyForm: document.getElementById('apiKeyForm'),
         btnApiKeyConfig: document.getElementById('btnApiKeyConfig'),
         btnApiKeyCancel: document.getElementById('btnApiKeyCancel'),
         btnApiKeySave: document.getElementById('btnApiKeySave'),
