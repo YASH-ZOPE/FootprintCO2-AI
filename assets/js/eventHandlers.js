@@ -141,13 +141,22 @@ window.App = window.App || {};
             UI.ModalManager.close(DOM.apiKeyModal);
         });
 
-        DOM.btnApiKeySave.addEventListener('click', () => {
+        const saveApiKeyAction = () => {
             App.setApiKey(DOM.geminiApiKeyInput.value.trim());
             UI.ModalManager.close(DOM.apiKeyModal);
 
             const latest = StorageLayer.getLatestEmissions();
             if (latest) {
                 App.triggerAICoach(latest.total, true);
+            }
+        };
+
+        DOM.btnApiKeySave.addEventListener('click', saveApiKeyAction);
+
+        DOM.geminiApiKeyInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveApiKeyAction();
             }
         });
 
@@ -168,6 +177,19 @@ window.App = window.App || {};
                 }, 5000);
             }
         });
+
+        if (DOM.onboardingForm) {
+            DOM.onboardingForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                DOM.btnNextStep.click();
+            });
+        }
+
+        if (DOM.calculatorForm) {
+            DOM.calculatorForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+            });
+        }
     }
 
     App.EventHandlers = {
